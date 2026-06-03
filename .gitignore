@@ -1,0 +1,28 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Secrets / keys
+*.pem
+*.key
+cloudflared/*.json
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
