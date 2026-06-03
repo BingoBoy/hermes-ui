@@ -107,17 +107,31 @@ Hermes UI reads gateway status and verified gateway logs through allowlisted bac
 
 ## Forward Plan: Cloudflare Access and Tunnel
 
-Not implemented in this phase. Planned sequence:
+Planning completed in Phase 4. Execution is deferred until manual Cloudflare setup is run on Bob.
+
+| Item | Planned value |
+|------|---------------|
+| Public URL | `https://hermes.strategistudio.no` |
+| Fallback URL | `https://hermes-ui.strategistudio.no` |
+| Tunnel name | `mac-mini-m4-tunnel` |
+| Ingress target | `http://127.0.0.1:8787` |
+| Access policy | `Only Truls` pattern in Zero Trust |
+
+Planned sequence:
 
 1. Keep Hermes UI bound to `127.0.0.1:8787` on Bob.
-2. Expose the service through a Cloudflare Tunnel to a chosen hostname such as `hermes.strategistudio.no`.
-3. Protect external access with Cloudflare Access.
-4. Re-run security verification before any external exposure.
+2. Authenticate `cloudflared` and create or select the Bob Mac Mini M4 tunnel.
+3. Route `hermes.strategistudio.no` through the tunnel to loopback.
+4. Protect the hostname with Cloudflare Access before sharing the URL.
+5. Re-run local and external verification.
 
-Deferred until tunnel identity, Access policy, and credential handling are verified separately.
+See `docs/architecture/cloudflare.md` for command checklist and verification gates.
+
+No Cloudflare configuration was changed during the planning phase.
 
 ## Related Documents
 
 - `README.md` — quick Bob operations and API smoke tests
 - `docs/security/README.md` — security boundaries and gates
 - `docs/architecture/logging.md` — verified Hermes gateway log allowlist
+- `docs/architecture/cloudflare.md` — Cloudflare Tunnel and Access plan

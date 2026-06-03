@@ -79,16 +79,19 @@
 
 **Requirements:** OPS-01, SEC-04
 
+**Status:** Planned on 2026-06-03 — execution deferred
+
 **Success criteria:**
 1. Tunnel identity and hostname are verified before configuration.
 2. Hermes UI remains bound to loopback on Bob.
 3. External access is protected by Cloudflare Access.
 4. No Cloudflare credentials are committed to the repo.
+5. Planning docs include manual command checklist and verification gates.
 
 **Suggested plans:**
 - Verify tunnel name, hostname, and Access policy.
-- Configure tunnel routing to `127.0.0.1:8787`.
-- Re-run security verification.
+- Document ingress routing to `127.0.0.1:8787`.
+- Execute Cloudflare setup manually on Bob, then re-run security verification.
 
 ## Phase 5: Verified Service Actions
 

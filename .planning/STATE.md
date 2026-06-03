@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 4 - Cloudflare Access and Tunnel
+**Current focus:** Phase 4 - Cloudflare Access and Tunnel (planned, not executed)
 
 ## Workflow
 
@@ -20,12 +20,12 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 3 |
-| Name | Document Bob LaunchAgent Deployment |
-| Status | Complete |
-| Requirements | RUN-01, RUN-02, OPS-02 |
-| Current command | `/gsd-plan-phase 3` executed as docs-only phase |
-| Next command | `/gsd-discuss-phase 4` for Cloudflare Access and Tunnel |
+| Phase | 4 |
+| Name | Cloudflare Access and Tunnel |
+| Status | Planned |
+| Requirements | OPS-01, SEC-04 |
+| Current command | `/gsd-discuss-phase 4` completed as docs-only planning |
+| Next command | Manual Cloudflare execution on Bob, then `/gsd-execute-phase 4` or verification |
 
 ## Session Plan
 
@@ -107,6 +107,21 @@ Atomic tasks:
 - Phase 1 includes the first read-only MVP foundation, not write actions.
 - Phase 2 implemented bounded read-only logs API for `gateway_stdout` and `gateway_stderr`.
 - Phase 3 documented verified Hermes UI LaunchAgent deployment on Bob.
+- Phase 4 planned Cloudflare Tunnel and Access exposure without changing runtime.
+
+## Phase 4 Cloudflare Planning
+
+**Planned on:** 2026-06-03
+
+- Recommended public hostname: `https://hermes.strategistudio.no`
+- Fallback hostname: `https://hermes-ui.strategistudio.no`
+- Recommended tunnel name: `mac-mini-m4-tunnel`
+- Ingress target: `http://127.0.0.1:8787`
+- Access policy: `Only Truls` pattern in Zero Trust
+- `cloudflared` on Bob: `/opt/homebrew/bin/cloudflared` version `2026.5.1`
+- `cloudflared tunnel list` requires `cloudflared tunnel login` before tunnel inspection
+- Legacy tunnel `kokebok-web` documented but not chosen for Hermes UI
+- No Cloudflare configuration was changed during planning
 
 ## Phase 2 Verification
 
@@ -128,5 +143,15 @@ Atomic tasks:
 - Secret scan found no committed `.env` or credential material.
 - `.venv/bin/python -m pytest` passed: 10 tests.
 
+## Phase 4 Verification
+
+**Verified:** 2026-06-03
+
+- Docs-only change: no backend or test code modified.
+- Bob Cloudflare preconditions verified read-only via SSH inspection.
+- Secret scan found no committed `.env`, credentials, or token material added by this phase.
+- No Cloudflare tunnels, DNS routes, or Access apps were created.
+- `.venv/bin/python -m pytest` passed: 10 tests.
+
 ---
-*Last updated: 2026-06-03 after Phase 3 documentation*
+*Last updated: 2026-06-03 after Phase 4 Cloudflare planning*
