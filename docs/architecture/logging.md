@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the safe logging model for the future Hermes UI log viewer. It is planning documentation only; no production log viewer is implemented yet.
+This document defines the safe logging model for the Hermes UI log viewer.
 
 ## Verified Sources on Bob
 
@@ -21,30 +21,30 @@ The Hermes LaunchAgent was inspected read-only via `BobRemote`.
 
 ## Allowlist Model
 
-A future log viewer must use a static server-side allowlist. The browser may request a `log_id`, but it must never provide a file path.
+The log viewer uses a static server-side allowlist. The browser may request a `source_id`, but it must never provide a file path.
 
 Each log source must define:
 
 | Field | Description |
 |-------|-------------|
-| `log_id` | Stable machine-readable ID used in API routes |
+| `source_id` | Stable machine-readable ID used in API routes |
 | `display_name` | Human-friendly UI label |
 | `absolute_path` | Verified absolute file path on Bob |
 | `max_lines` | Hard upper bound for returned lines |
 | `requires_redaction` | Whether every line must pass redaction |
 | `phase_status` | `verified`, `candidate`, or `tbd` |
 
-## Proposed Initial Allowlist
+## Active Allowlist
 
-| log_id | display_name | absolute_path | max_lines | requires_redaction | phase_status |
-|--------|--------------|---------------|-----------|--------------------|--------------|
-| `hermes_gateway_stdout` | Hermes gateway output | `/Users/trulsdahl/.hermes/logs/gateway.log` | 500 | yes | verified |
-| `hermes_gateway_stderr` | Hermes gateway errors | `/Users/trulsdahl/.hermes/logs/gateway.error.log` | 500 | yes | verified |
-| `hermes_agent` | Hermes agent log | `/Users/trulsdahl/.hermes/logs/agent.log` | 500 | yes | candidate |
-| `hermes_errors` | Hermes errors log | `/Users/trulsdahl/.hermes/logs/errors.log` | 500 | yes | candidate |
+| source_id | display_name | absolute_path | max_lines | requires_redaction | status |
+|-----------|--------------|---------------|-----------|--------------------|--------|
+| `gateway_stdout` | Hermes gateway output | `/Users/trulsdahl/.hermes/logs/gateway.log` | 500 | yes | enabled |
+| `gateway_stderr` | Hermes gateway errors | `/Users/trulsdahl/.hermes/logs/gateway.error.log` | 500 | yes | enabled |
+| `agent` | Hermes agent log | `/Users/trulsdahl/.hermes/logs/agent.log` | 500 | yes | disabled |
+| `errors` | Hermes errors log | `/Users/trulsdahl/.hermes/logs/errors.log` | 500 | yes | disabled |
 | `hermes_ui_backend` | Hermes UI backend log | TBD | 500 | yes | tbd |
 
-Only `verified` sources should be enabled by default in the first log viewer implementation.
+Only enabled sources are exposed through `/api/logs/sources`.
 
 ## Explicitly Excluded Sources
 
@@ -64,12 +64,13 @@ Do not expose these through the log viewer:
 Recommended future API shape:
 
 ```text
-GET /api/logs/{log_id}?lines=100
+GET /api/logs/sources
+GET /api/logs/{source_id}?lines=100
 ```
 
 Rules:
 
-- `log_id` must resolve to a server-side allowlist entry.
+- `source_id` must resolve to a server-side allowlist entry.
 - `lines` must be an integer bounded between 1 and the source `max_lines`.
 - Missing files should return a safe structured error.
 - File contents must be read-only.

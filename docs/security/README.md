@@ -124,7 +124,18 @@ Fail closed when uncertain:
 - If a line appears to contain a private key block, suppress the line.
 - If a multiline secret begins, suppress until the block ends.
 - If a log file cannot be read safely, return a structured safe error instead of raw exception text.
-- If a requested `log_id` is unknown, return `404` or a safe `unknown_log_source` error.
+- If a requested `source_id` is unknown, return `404` or a safe `unknown_log_source` error.
+
+## Implemented Logs API
+
+Read-only log endpoints are now available:
+
+```text
+GET /api/logs/sources
+GET /api/logs/{source_id}?lines=100
+```
+
+They remain bounded, allowlisted, and redacted. They do not accept file paths from the client.
 
 The redaction layer must run before JSON serialization and before any dashboard rendering.
 

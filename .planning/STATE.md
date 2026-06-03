@@ -22,10 +22,10 @@ discuss -> plan -> execute -> verify
 |-------|-------|
 | Phase | 2 |
 | Name | Verified Logs Viewer |
-| Status | Planning |
+| Status | Complete |
 | Requirements | LOGS-01, LOGS-02, LOGS-03 |
 | Current command | `/gsd-discuss-phase 2` run inline because `gsd-sdk` is unavailable |
-| Next command | `/gsd-plan-phase 2` when ready to implement the bounded log viewer |
+| Next command | `/gsd-discuss-phase 3` when ready to plan verified service actions |
 
 ## Session Plan
 
@@ -76,7 +76,7 @@ Atomic tasks:
 ## Open Gates
 
 - Verify actual Hermes launchctl commands before implementing start, stop, or restart.
-- Implement log display only from verified server-side allowlisted files.
+- Log display is implemented only from verified server-side allowlisted files.
 - Keep Phase 1 read-only complete; future phases must not reintroduce write actions without their own verification.
 - Keep real `.env` out of git.
 - Keep `ALLOW_UNSAFE_COMMANDS=false`.
@@ -90,7 +90,17 @@ Atomic tasks:
 - Cloudflare Access is required for later external access.
 - Free terminal in browser is out of scope.
 - Phase 1 includes the first read-only MVP foundation, not write actions.
-- Phase 2 planning has verified Hermes gateway stdout/stderr paths but has not implemented log viewing yet.
+- Phase 2 implemented bounded read-only logs API for `gateway_stdout` and `gateway_stderr`.
+
+## Phase 2 Verification
+
+**Verified:** 2026-06-03
+
+- `python3 -m compileall backend tests` passed.
+- `.venv/bin/python -m pytest` passed: 10 tests.
+- Curl checks passed for `/api/logs/sources`, `/api/logs/gateway_stdout`, and `/api/logs/gateway_stderr`.
+- Missing local log files on dev machine returned safe structured errors without traceback.
+- Security scan found no `shell=True`, no write-action routes, and no unsafe command/path API.
 
 ---
-*Last updated: 2026-06-03 during Phase 2 log source planning*
+*Last updated: 2026-06-03 after Phase 2 implementation*

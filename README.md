@@ -34,15 +34,24 @@ http://127.0.0.1:8787
 
 ## API
 
-Første MVP eksponerer kun read-only endepunkter:
+Read-only endepunkter:
 
 ```text
 GET /api/status
 GET /api/system
 GET /api/hermes/status
+GET /api/logs/sources
+GET /api/logs/{source_id}?lines=100
 ```
 
-Ingen start/stopp/restart-, logg-, terminal- eller shell-endepunkter finnes i denne fasen.
+Eksempler:
+
+```text
+GET /api/logs/gateway_stdout?lines=50
+GET /api/logs/gateway_stderr?lines=50
+```
+
+Ingen start/stopp/restart-, terminal- eller shell-endepunkter finnes. Loggvisning bruker kun server-side allowlist.
 
 ## Konfigurasjon
 
@@ -64,6 +73,9 @@ python -m pytest
 curl http://127.0.0.1:8787/api/status
 curl http://127.0.0.1:8787/api/system
 curl http://127.0.0.1:8787/api/hermes/status
+curl http://127.0.0.1:8787/api/logs/sources
+curl "http://127.0.0.1:8787/api/logs/gateway_stdout?lines=50"
+curl "http://127.0.0.1:8787/api/logs/gateway_stderr?lines=50"
 ```
 
 Serveren skal startes med `--host 127.0.0.1 --port 8787`.

@@ -1,64 +1,62 @@
 # Phase 2: Verified Logs Viewer - Plan
 
 **Created:** 2026-06-03
-**Status:** Ready for future implementation planning
-**Scope:** Log source verification and safe log viewer design only
+**Status:** Complete
+**Scope:** Bounded read-only log viewer implementation
 
 ## Goal
 
-Prepare the future read-only log viewer by verifying Hermes log sources, defining a strict server-side allowlist, and documenting redaction rules. This plan does not implement production log viewer code.
+Implement a bounded read-only log viewer using verified Hermes log paths and a strict server-side allowlist. No write actions, no client-supplied paths, and mandatory redaction before response.
 
 ## Atomic Tasks
 
-### Task 1 - Lock Verified Log Sources
+### Task 1 - Allowlist and Redaction
 
 **Output:**
-- `02-CONTEXT.md`
-- `docs/architecture/logging.md`
-- updated `.planning/STATE.md`
+- `backend/log_sources.py`
+- `backend/redaction.py`
+- `backend/logs.py`
+- unit tests for redaction and allowlist behavior
 
 **Acceptance criteria:**
-- LaunchAgent plist path is documented.
-- `StandardOutPath` and `StandardErrorPath` are documented as verified.
-- Candidate sources are clearly marked as candidate or TBD.
-- Excluded sources are documented.
+- Only `gateway_stdout` and `gateway_stderr` are enabled.
+- Candidate sources remain disabled.
+- Redaction masks tokens, API keys, Bearer headers, private keys, password fields, Cloudflare credentials, and `.env`-style lines.
 
-### Task 2 - Define Allowlist and Redaction Contract
+### Task 2 - Logs API
 
 **Output:**
-- `docs/architecture/logging.md`
-- `docs/security/README.md`
-- `docs/api/logs.md`
+- `GET /api/logs/sources`
+- `GET /api/logs/{source_id}?lines=100`
 
 **Acceptance criteria:**
-- Future log viewer uses `log_id`, not client-supplied paths.
-- Each allowlist entry has `log_id`, display name, absolute path, max lines, redaction flag, and status.
-- Redaction rules cover tokens, API keys, Bearer headers, private keys, password fields, Cloudflare credentials, and `.env` lines.
-- Failure mode is fail-closed.
+- Unknown `source_id` returns safe `404`.
+- Missing log file returns structured safe error without traceback.
+- `lines` defaults to 100 and is capped at 500.
+- Responses never include raw secrets.
 
-### Task 3 - Verify No Runtime Scope Change
+### Task 3 - Dashboard, Tests, and Docs
 
 **Output:**
-- Passing existing tests.
-- Security scan confirming no new write actions or log API routes.
-- One atomic documentation commit.
+- Updated dashboard log panels
+- Extended tests and documentation
 
 **Acceptance criteria:**
-- No production log viewer code is added.
-- No API route for logs is added.
-- No start/stop/restart routes are added.
-- No free terminal or shell endpoint is added.
-- No secrets are committed.
-
-## Future Implementation Notes
-
-Future implementation should be planned separately and remain read-only:
-
-- Add static log source definitions server-side.
-- Add redaction utility with tests.
-- Add `GET /api/logs/{log_id}?lines=100`.
-- Add dashboard panel only after endpoint tests pass.
+- Dashboard shows allowlisted log sources and bounded previews.
+- All tests pass.
+- No new write-action routes are introduced.
 
 ---
 
 *Plan created: 2026-06-03*
+## Completion
+
+Phase 2 completed on 2026-06-03:
+
+- Allowlist and redaction modules implemented.
+- Logs API endpoints implemented.
+- Dashboard, tests, and documentation updated.
+- All tests passed.
+
+*Plan updated: 2026-06-03 for implementation*
+*Plan completed: 2026-06-03*
