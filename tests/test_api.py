@@ -43,7 +43,7 @@ def test_api_hermes_status_fails_safely() -> None:
 
 
 def test_no_write_action_routes_exist() -> None:
-    forbidden_terms = {"start", "stop", "restart", "logs", "terminal", "shell", "command"}
+    forbidden_terms = {"start", "stop", "restart", "terminal", "shell", "command"}
     routes = [
         route
         for route in app.routes

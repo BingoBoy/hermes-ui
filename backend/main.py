@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse
 
 from backend.config import get_settings
+from backend.log_sources import DEFAULT_LOG_LINES, MAX_LOG_LINES
+from backend.logs import get_log_content, get_logs_sources_payload
 from backend.status import get_hermes_status, get_service_status, get_system_status
 
 app = FastAPI(
@@ -81,13 +83,19 @@ def dashboard() -> str:
       border-radius: 12px;
       margin-top: 20px;
     }
+    .logs-grid {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
   </style>
 </head>
 <body>
   <main>
     <header>
       <h1>Hermes UI for Bob</h1>
-      <p class="subtle">Read-only MVP: status, Hermes status, and system information.</p>
+      <p class="subtle">Read-only MVP: status, Hermes status, system information, and bounded logs.</p>
     </header>
     <section class="grid">
       <article class="card">
@@ -103,9 +111,23 @@ def dashboard() -> str:
         <pre id="system">Loading...</pre>
       </article>
     </section>
+    <section class="logs-grid">
+      <article class="card">
+        <h2>Log Sources</h2>
+        <pre id="log-sources">Loading...</pre>
+      </article>
+      <article class="card">
+        <h2>Gateway Output</h2>
+        <pre id="log-stdout">Loading...</pre>
+      </article>
+      <article class="card">
+        <h2>Gateway Errors</h2>
+        <pre id="log-stderr">Loading...</pre>
+      </article>
+    </section>
     <section class="notice">
-      Service controls are intentionally not available in this MVP. Start, stop, restart,
-      log viewing, and terminal access require later verification and planning.
+      Logs are read-only from server-side allowlisted sources. Start, stop, restart,
+      and terminal access remain unavailable.
     </section>
   </main>
   <script>
@@ -122,6 +144,9 @@ def dashboard() -> str:
     render("service", "/api/status");
     render("hermes", "/api/hermes/status");
     render("system", "/api/system");
+    render("log-sources", "/api/logs/sources");
+    render("log-stdout", "/api/logs/gateway_stdout?lines=50");
+    render("log-stderr", "/api/logs/gateway_stderr?lines=50");
   </script>
 </body>
 </html>
@@ -144,4 +169,27 @@ def api_system() -> dict:
 def api_hermes_status() -> dict:
     settings = get_settings()
     return get_hermes_status(settings)
+
+
+@app.get("/api/logs/sources")
+def api_logs_sources() -> dict:
+    return get_logs_sources_payload()
+
+
+@app.get("/api/logs/{source_id}")
+def api_logs_source(
+    source_id: str,
+    lines: int = Query(default=DEFAULT_LOG_LINES, ge=1, le=MAX_LOG_LINES),
+) -> dict:
+    payload = get_log_content(source_id, lines)
+    if payload is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "success": False,
+                "error": "unknown_log_source",
+                "details": f"Unknown or disabled log source: {source_id}",
+            },
+        )
+    return payload
 
