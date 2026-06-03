@@ -73,3 +73,58 @@ Before adding logs:
 3. Bound the number of returned lines.
 4. Ensure no secrets are exposed.
 
+## Verified Log Source Gate
+
+Log viewing must use a server-side allowlist. The browser may request a known `log_id`, but it must never provide:
+
+- absolute file paths
+- relative file paths
+- glob patterns
+- directory names
+- arbitrary filenames
+
+Verified initial log paths from the Hermes LaunchAgent on Bob:
+
+| Source | Path | Status |
+|--------|------|--------|
+| Hermes gateway stdout | `/Users/trulsdahl/.hermes/logs/gateway.log` | verified |
+| Hermes gateway stderr | `/Users/trulsdahl/.hermes/logs/gateway.error.log` | verified |
+
+Candidate sources that require explicit review before enabling:
+
+| Source | Path | Status |
+|--------|------|--------|
+| Hermes agent log | `/Users/trulsdahl/.hermes/logs/agent.log` | candidate |
+| Hermes errors log | `/Users/trulsdahl/.hermes/logs/errors.log` | candidate |
+| Hermes UI backend log | TBD | tbd |
+
+## Log Redaction Rules
+
+Every log line must pass redaction before it is returned by an API or rendered in the UI.
+
+Redact at minimum:
+
+- Bearer headers and bearer tokens
+- API keys
+- generic tokens
+- password fields
+- private key blocks
+- Cloudflare credentials
+- `.env`-style lines
+- common secret assignments such as `SECRET=...`, `TOKEN=...`, `PASSWORD=...`, `API_KEY=...`
+
+Suggested replacement:
+
+```text
+[REDACTED]
+```
+
+Fail closed when uncertain:
+
+- If a line appears to contain a private key block, suppress the line.
+- If a multiline secret begins, suppress until the block ends.
+- If a log file cannot be read safely, return a structured safe error instead of raw exception text.
+- If a requested `log_id` is unknown, return `404` or a safe `unknown_log_source` error.
+
+The redaction layer must run before JSON serialization and before any dashboard rendering.
+

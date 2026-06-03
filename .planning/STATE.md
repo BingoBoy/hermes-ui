@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 1 - Read-Only MVP Foundation
+**Current focus:** Phase 2 - Verified Logs Viewer
 
 ## Workflow
 
@@ -20,12 +20,12 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 1 |
-| Name | Read-Only MVP Foundation |
-| Status | Complete |
-| Requirements | PROJ-01, PROJ-02, PROJ-03, RUN-01, RUN-02, RUN-03, RUN-04, API-01, API-02, API-03, API-04, UI-01, UI-02, UI-03, UI-04, SEC-01, SEC-02, SEC-03, SEC-04 |
-| Current command | `/gsd-discuss-phase 1` run inline because `gsd-sdk` is unavailable |
-| Next command | `/gsd-discuss-phase 2` when ready to plan verified logs viewer |
+| Phase | 2 |
+| Name | Verified Logs Viewer |
+| Status | Planning |
+| Requirements | LOGS-01, LOGS-02, LOGS-03 |
+| Current command | `/gsd-discuss-phase 2` run inline because `gsd-sdk` is unavailable |
+| Next command | `/gsd-plan-phase 2` when ready to implement the bounded log viewer |
 
 ## Session Plan
 
@@ -54,14 +54,34 @@ Atomic tasks:
 - `.env` is not tracked by git.
 - `ALLOW_UNSAFE_COMMANDS=false` remains in `.env.example`.
 
+## Phase 2 Log Source Findings
+
+**Verified on Bob via read-only metadata inspection:** 2026-06-03
+
+- Bob hostname: `Truls-sin-Mac-mini.local`
+- Bob user: `trulsdahl`
+- LaunchAgent plist: `/Users/trulsdahl/Library/LaunchAgents/ai.hermes.gateway.plist`
+- LaunchAgent label: `ai.hermes.gateway`
+- Working directory: `/Users/trulsdahl/.hermes/hermes-agent`
+- Program arguments: `/Users/trulsdahl/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main gateway run --replace`
+- StandardOutPath: `/Users/trulsdahl/.hermes/logs/gateway.log`
+- StandardErrorPath: `/Users/trulsdahl/.hermes/logs/gateway.error.log`
+
+**Candidate sources, not enabled by default yet:**
+
+- `/Users/trulsdahl/.hermes/logs/agent.log`
+- `/Users/trulsdahl/.hermes/logs/errors.log`
+- Hermes UI backend log: TBD
+
 ## Open Gates
 
 - Verify actual Hermes launchctl commands before implementing start, stop, or restart.
-- Verify actual Hermes log paths before implementing log display.
+- Implement log display only from verified server-side allowlisted files.
 - Keep Phase 1 read-only complete; future phases must not reintroduce write actions without their own verification.
 - Keep real `.env` out of git.
 - Keep `ALLOW_UNSAFE_COMMANDS=false`.
 - Do not add Cloudflare configuration or credentials in this phase.
+- Do not add any API route that accepts a file path from client input.
 
 ## Memory
 
@@ -70,6 +90,7 @@ Atomic tasks:
 - Cloudflare Access is required for later external access.
 - Free terminal in browser is out of scope.
 - Phase 1 includes the first read-only MVP foundation, not write actions.
+- Phase 2 planning has verified Hermes gateway stdout/stderr paths but has not implemented log viewing yet.
 
 ---
-*Last updated: 2026-06-03 after Phase 1 verification*
+*Last updated: 2026-06-03 during Phase 2 log source planning*

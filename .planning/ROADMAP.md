@@ -37,7 +37,7 @@
 
 ## Phase 2: Verified Logs Viewer
 
-**Goal:** Add bounded Hermes log display only after actual log paths and redaction rules are verified.
+**Goal:** Prepare the bounded Hermes log viewer by verifying actual log paths, defining the server-side allowlist, and locking redaction rules before implementation.
 
 **Requirements:** LOGS-01, LOGS-02, LOGS-03
 
@@ -46,11 +46,13 @@
 2. Log output is bounded by a safe line limit.
 3. Log output is sanitized before display.
 4. No raw environment or credential output is exposed.
+5. No production log viewer code or logs API route is implemented during phase discussion/planning.
+6. Future log viewer reads only server-side allowlisted sources by `log_id`, never paths from client input.
 
 **Suggested plans:**
-- Verify log paths.
-- Define redaction rules.
-- Implement bounded read-only log endpoint and UI panel.
+- Verify LaunchAgent log paths and candidate Hermes log files.
+- Define allowlist and redaction contracts.
+- Plan bounded read-only log endpoint and UI panel for a later execution step.
 
 ## Phase 3: Verified Service Actions
 

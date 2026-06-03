@@ -51,6 +51,8 @@ Deferred to future release. Tracked but not in current roadmap.
 - **LOGS-02**: Log output is sanitized before display.
 - **LOGS-03**: User can choose a bounded number of log lines such as 50, 100, or 500.
 
+**Phase 2 planning status:** Log paths and redaction rules are being verified before implementation. No log viewer API or UI is implemented yet.
+
 ### Service Actions
 
 - **ACT-01**: User can start Hermes through a verified approved command.
@@ -104,6 +106,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-02 | Phase 1 | Complete |
 | SEC-03 | Phase 1 | Complete |
 | SEC-04 | Phase 1 | Complete |
+| LOGS-01 | Phase 2 | Planned |
+| LOGS-02 | Phase 2 | Planned |
+| LOGS-03 | Phase 2 | Planned |
 
 **Coverage:**
 - v1 requirements: 19 total
