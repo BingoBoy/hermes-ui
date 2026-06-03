@@ -17,7 +17,67 @@ Første versjon skal være read-only:
 
 Start/stopp/restart av Hermes skal ikke implementeres før LaunchAgent og loggbaner er verifisert.
 
-## Lokal kjøring
+## Bob LaunchAgent-drift
+
+Hermes UI kjører som LaunchAgent på Bob (`Truls-sin-Mac-mini.local`).
+
+| Felt | Verifisert verdi |
+|------|------------------|
+| Label | `no.truls.hermes-ui` |
+| Plist | `/Users/trulsdahl/Library/LaunchAgents/no.truls.hermes-ui.plist` |
+| Working directory | `/Users/trulsdahl/Dev/hermes-ui` |
+| Bind | `127.0.0.1:8787` |
+| Prosess | `uvicorn backend.main:app` via `.venv` |
+
+### Start, stopp og restart
+
+Kjør på Bob som bruker `trulsdahl`:
+
+```bash
+# Start
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.truls.hermes-ui.plist
+
+# Stopp
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/no.truls.hermes-ui.plist
+
+# Restart
+launchctl kickstart -k gui/$(id -u)/no.truls.hermes-ui
+```
+
+### Sjekk status
+
+```bash
+# LaunchAgent-status
+launchctl list | grep hermes-ui
+
+# Port og prosess
+lsof -nP -iTCP:8787 -sTCP:LISTEN
+
+# API-status
+curl -s http://127.0.0.1:8787/api/status | python3 -m json.tool
+```
+
+Forventet API-svar inkluderer `"status": "ok"`, `"read_only": true`, og `"allow_unsafe_commands": false`.
+
+### Les Hermes UI-logger
+
+LaunchAgent skriver til:
+
+```text
+/Users/trulsdahl/.hermes-ui/logs/hermes-ui.log
+/Users/trulsdahl/.hermes-ui/logs/hermes-ui.error.log
+```
+
+Eksempler:
+
+```bash
+tail -n 100 ~/.hermes-ui/logs/hermes-ui.log
+tail -n 100 ~/.hermes-ui/logs/hermes-ui.error.log
+```
+
+Se `docs/architecture/deployment.md` for full drift- og sikkerhetsmodell.
+
+## Lokal kjøring (utvikling)
 
 ```bash
 python3 -m venv .venv

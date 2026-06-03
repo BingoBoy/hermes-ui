@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 2 - Verified Logs Viewer
+**Current focus:** Phase 4 - Cloudflare Access and Tunnel
 
 ## Workflow
 
@@ -20,12 +20,12 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 2 |
-| Name | Verified Logs Viewer |
+| Phase | 3 |
+| Name | Document Bob LaunchAgent Deployment |
 | Status | Complete |
-| Requirements | LOGS-01, LOGS-02, LOGS-03 |
-| Current command | `/gsd-discuss-phase 2` run inline because `gsd-sdk` is unavailable |
-| Next command | `/gsd-discuss-phase 3` when ready to plan verified service actions |
+| Requirements | RUN-01, RUN-02, OPS-02 |
+| Current command | `/gsd-plan-phase 3` executed as docs-only phase |
+| Next command | `/gsd-discuss-phase 4` for Cloudflare Access and Tunnel |
 
 ## Session Plan
 
@@ -46,7 +46,7 @@ Atomic tasks:
 **Verified:** 2026-06-03
 
 - Python syntax compilation passed for `backend` and `tests`.
-- Pytest passed: 4 tests.
+- Pytest passed: 10 tests.
 - Local server started on `127.0.0.1:8787`.
 - Curl checks passed for `/api/status`, `/api/system`, and `/api/hermes/status`.
 - Hermes status returned safe `not_detected` state when Hermes was not found locally.
@@ -71,16 +71,31 @@ Atomic tasks:
 
 - `/Users/trulsdahl/.hermes/logs/agent.log`
 - `/Users/trulsdahl/.hermes/logs/errors.log`
-- Hermes UI backend log: TBD
+- Hermes UI backend log: verified on disk, not yet in logs API allowlist
+
+## Phase 3 Bob LaunchAgent Findings
+
+**Verified on Bob via read-only inspection:** 2026-06-03
+
+- Hermes UI LaunchAgent label: `no.truls.hermes-ui`
+- Hermes UI LaunchAgent plist: `/Users/trulsdahl/Library/LaunchAgents/no.truls.hermes-ui.plist`
+- Working directory: `/Users/trulsdahl/Dev/hermes-ui`
+- Program: `/Users/trulsdahl/Dev/hermes-ui/.venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8787`
+- StandardOutPath: `/Users/trulsdahl/.hermes-ui/logs/hermes-ui.log`
+- StandardErrorPath: `/Users/trulsdahl/.hermes-ui/logs/hermes-ui.error.log`
+- Bind address: `127.0.0.1:8787`
+- API status: `ok`
+- `read_only`: `true`
+- `allow_unsafe_commands`: `false`
 
 ## Open Gates
 
-- Verify actual Hermes launchctl commands before implementing start, stop, or restart.
+- Verify actual Hermes launchctl commands before implementing start, stop, or restart in UI.
 - Log display is implemented only from verified server-side allowlisted files.
 - Keep Phase 1 read-only complete; future phases must not reintroduce write actions without their own verification.
 - Keep real `.env` out of git.
 - Keep `ALLOW_UNSAFE_COMMANDS=false`.
-- Do not add Cloudflare configuration or credentials in this phase.
+- Cloudflare Tunnel and Access are planned but not configured yet.
 - Do not add any API route that accepts a file path from client input.
 
 ## Memory
@@ -91,6 +106,7 @@ Atomic tasks:
 - Free terminal in browser is out of scope.
 - Phase 1 includes the first read-only MVP foundation, not write actions.
 - Phase 2 implemented bounded read-only logs API for `gateway_stdout` and `gateway_stderr`.
+- Phase 3 documented verified Hermes UI LaunchAgent deployment on Bob.
 
 ## Phase 2 Verification
 
@@ -102,5 +118,15 @@ Atomic tasks:
 - Missing local log files on dev machine returned safe structured errors without traceback.
 - Security scan found no `shell=True`, no write-action routes, and no unsafe command/path API.
 
+## Phase 3 Verification
+
+**Verified:** 2026-06-03
+
+- Docs-only change: no backend or test code modified.
+- Bob LaunchAgent metadata verified via read-only SSH inspection.
+- `git status` confirmed documentation and planning updates only.
+- Secret scan found no committed `.env` or credential material.
+- `.venv/bin/python -m pytest` passed: 10 tests.
+
 ---
-*Last updated: 2026-06-03 after Phase 2 implementation*
+*Last updated: 2026-06-03 after Phase 3 documentation*

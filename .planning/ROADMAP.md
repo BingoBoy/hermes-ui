@@ -10,8 +10,10 @@
 |-------|------|------|--------------|---------|
 | 1 | Read-Only MVP Foundation | Deliver the first safe local MVP: context lock, read-only backend, status dashboard, and built-in verification | PROJ-01, PROJ-02, PROJ-03, RUN-01, RUN-02, RUN-03, RUN-04, API-01, API-02, API-03, API-04, UI-01, UI-02, UI-03, UI-04, SEC-01, SEC-02, SEC-03, SEC-04 | yes |
 | 2 | Verified Logs Viewer | Add bounded Hermes log display only after actual log paths and redaction rules are verified | LOGS-01, LOGS-02, LOGS-03 | yes |
-| 3 | Verified Service Actions | Add start, stop, and restart controls only after launchctl commands are verified and audit logging is planned | ACT-01, ACT-02, ACT-03, ACT-04 | yes |
-| 4 | Operations Enrichment | Add richer operational views for Cloudflare Tunnel, launchctl, Docker, and adjacent services where relevant | OPS-01, OPS-02, OPS-03 | yes |
+| 3 | Document Bob LaunchAgent Deployment | Document verified Hermes UI LaunchAgent operations on Bob without changing runtime code | RUN-01, RUN-02, OPS-02 | no |
+| 4 | Cloudflare Access and Tunnel | Expose Hermes UI safely through Cloudflare Tunnel and Cloudflare Access | OPS-01, SEC-04 | yes |
+| 5 | Verified Service Actions | Add start, stop, and restart controls only after launchctl commands are verified and audit logging is planned | ACT-01, ACT-02, ACT-03, ACT-04 | yes |
+| 6 | Operations Enrichment | Add richer operational views for launchctl, Docker, and adjacent services where relevant | OPS-02, OPS-03 | yes |
 
 ## Phase 1: Read-Only MVP Foundation
 
@@ -54,7 +56,41 @@
 - Define allowlist and redaction contracts.
 - Plan bounded read-only log endpoint and UI panel for a later execution step.
 
-## Phase 3: Verified Service Actions
+## Phase 3: Document Bob LaunchAgent Deployment
+
+**Goal:** Document that Hermes UI runs as a verified LaunchAgent on Bob without changing runtime code.
+
+**Requirements:** RUN-01, RUN-02, OPS-02
+
+**Success criteria:**
+1. README documents Bob LaunchAgent start, stop, restart, status, log paths, and local API checks.
+2. `docs/architecture/deployment.md` documents local binding, launchd setup, log paths, and forward Cloudflare plan.
+3. GSD state records verified Bob LaunchAgent metadata.
+4. No backend code, secrets, or Cloudflare credentials are added.
+
+**Suggested plans:**
+- Verify LaunchAgent metadata on Bob.
+- Write deployment and operations documentation.
+- Update GSD state and re-run docs-only verification.
+
+## Phase 4: Cloudflare Access and Tunnel
+
+**Goal:** Expose Hermes UI safely through Cloudflare Tunnel and Cloudflare Access while keeping local binding on `127.0.0.1:8787`.
+
+**Requirements:** OPS-01, SEC-04
+
+**Success criteria:**
+1. Tunnel identity and hostname are verified before configuration.
+2. Hermes UI remains bound to loopback on Bob.
+3. External access is protected by Cloudflare Access.
+4. No Cloudflare credentials are committed to the repo.
+
+**Suggested plans:**
+- Verify tunnel name, hostname, and Access policy.
+- Configure tunnel routing to `127.0.0.1:8787`.
+- Re-run security verification.
+
+## Phase 5: Verified Service Actions
 
 **Goal:** Add start, stop, and restart controls only after launchctl commands are verified and audit logging is planned.
 
@@ -71,16 +107,16 @@
 - Design confirmation and audit model.
 - Implement approved service actions.
 
-## Phase 4: Operations Enrichment
+## Phase 6: Operations Enrichment
 
-**Goal:** Add richer operational views for Cloudflare Tunnel, launchctl, Docker, and adjacent services where relevant.
+**Goal:** Add richer operational views for launchctl, Docker, and adjacent services where relevant.
 
-**Requirements:** OPS-01, OPS-02, OPS-03
+**Requirements:** OPS-02, OPS-03
 
 **Success criteria:**
-1. Cloudflare Tunnel status is displayed only after tunnel identity is known.
-2. LaunchAgent detail display uses verified label/plist values.
-3. Docker status is added only if Docker becomes relevant to Hermes or adjacent services.
+1. LaunchAgent detail display uses verified label/plist values.
+2. Docker status is added only if Docker becomes relevant to Hermes or adjacent services.
+3. Operational cards remain read-only unless a verified write-action phase approves controls.
 
 **Suggested plans:**
 - Verify operational sources.
