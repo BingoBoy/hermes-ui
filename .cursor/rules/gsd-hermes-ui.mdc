@@ -1,0 +1,56 @@
+---
+description: Hermes UI GSD workflow and MVP safety rules
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Hermes UI for Bob - Project Rules
+
+Use the original GSD master flow for project work:
+
+```text
+discuss -> plan -> execute -> verify
+```
+
+## Authoritative Context
+
+- Treat `docs/notion/` as authoritative project context.
+- Treat `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, and `.planning/STATE.md` as current GSD planning state.
+
+## MVP Scope
+
+The first MVP is read-only:
+
+- Status for Hermes UI.
+- Status for Bob / Mac Mini M4.
+- Status for Hermes gateway.
+- Simple system information.
+
+Do not implement start, stop, restart, log viewing, or write actions until the relevant commands, paths, and safety model are explicitly verified and planned.
+
+## Security Rules
+
+- Do not implement a free terminal in the browser.
+- Do not add arbitrary shell command execution.
+- Do not expose secrets, tokens, passwords, private keys, Cloudflare credentials, or real `.env` content.
+- Bind local service defaults to `127.0.0.1:8787`.
+- Use Cloudflare Tunnel and Cloudflare Access for later external exposure.
+- Keep real `.env` files uncommitted; use `.env.example` as the tracked template.
+
+## Operational Gates
+
+Before service controls can be added, verify on Bob:
+
+- Exact `launchctl` start command.
+- Exact `launchctl` stop command.
+- Exact `launchctl` restart command.
+- LaunchAgent label and plist path.
+- Hermes log paths.
+- Redaction rules for any output shown in UI.
+
+## Code Style
+
+- Keep endpoints small, explicit, and testable.
+- Prefer allowlisted capabilities over abstractions that can execute arbitrary commands.
+- Add tests around security boundaries when behavior touches commands, logs, environment variables, or network binding.
