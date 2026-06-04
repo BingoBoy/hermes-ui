@@ -277,6 +277,61 @@ DASHBOARD_HTML = """\
       color: var(--muted);
       font-size: 0.92rem;
     }
+    .bob-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 8px;
+    }
+    .bob-history-table th,
+    .bob-history-table td {
+      text-align: left;
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .bob-history-table th {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .bob-history-table button.linkish {
+      border: none;
+      background: none;
+      color: #2563eb;
+      padding: 0;
+      text-decoration: underline;
+      cursor: pointer;
+      font: inherit;
+    }
+    .bob-history-empty {
+      color: var(--muted);
+      font-style: italic;
+      margin: 8px 0 0;
+    }
+    .bob-detail-panel {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .bob-detail-panel h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+    .status-pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #eef2f7;
+      color: var(--muted);
+    }
+    .status-pill.running { background: #dbeafe; color: #1d4ed8; }
+    .status-pill.done { background: var(--ok-bg); color: var(--ok); }
+    .status-pill.ready { background: var(--warn-bg); color: var(--warn); }
+    .status-pill.failed, .status-pill.blocked { background: var(--bad-bg); color: var(--bad); }
   </style>
 </head>
 <body>
@@ -378,6 +433,29 @@ DASHBOARD_HTML = """\
       <div class="action-result" id="bob-task-result" aria-live="polite"></div>
     </section>
 
+    <section class="card bob-section" id="bob-history-section" aria-label="Bob-oppgaver">
+      <div class="toolbar" style="margin-bottom: 8px;">
+        <h2 style="margin: 0;">Bob-oppgaver</h2>
+        <button type="button" id="bob-history-refresh">Oppdater oppgaver</button>
+      </div>
+      <p class="bob-intro">
+        Read-only historikk og status fra Hermes kanban — ikke chat eller terminal.
+      </p>
+      <div class="bob-disabled" id="bob-history-disabled" hidden>
+        Oppgaveliste er deaktivert (<code>ALLOW_BOB_TASKS=false</code>).
+      </div>
+      <div id="bob-history-content" hidden>
+        <p class="log-meta" id="bob-history-meta">Ingen data lastet ennå.</p>
+        <div id="bob-history-list-wrap"></div>
+        <div class="bob-detail-panel" id="bob-history-detail" hidden>
+          <h3 id="bob-detail-title">Oppgavedetaljer</h3>
+          <dl class="meta" id="bob-detail-meta"></dl>
+          <details><summary>Teknisk JSON</summary><pre id="bob-detail-json"></pre></details>
+        </div>
+      </div>
+      <div class="action-result" id="bob-history-result" aria-live="polite"></div>
+    </section>
+
     <section class="notice" id="dashboard-notice">
       Read-only kontrollpanel. Restart er tilgjengelig bare når service actions er aktivert på serveren.
       Oppdater siden manuelt eller bruk knappen over for å hente ny status.
@@ -474,8 +552,157 @@ DASHBOARD_HTML = """\
       bobTasksEnabled = !!enabled;
       const form = document.getElementById("bob-task-form");
       const disabled = document.getElementById("bob-task-disabled");
+      const historyContent = document.getElementById("bob-history-content");
+      const historyDisabled = document.getElementById("bob-history-disabled");
       form.hidden = !bobTasksEnabled;
       disabled.hidden = bobTasksEnabled;
+      historyContent.hidden = !bobTasksEnabled;
+      historyDisabled.hidden = bobTasksEnabled;
+      if (bobTasksEnabled) {
+        loadBobHistory();
+      }
+    }
+
+    function formatUnixTime(value) {
+      if (value === null || value === undefined || value === "") {
+        return "—";
+      }
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) {
+        return String(value);
+      }
+      const ms = numeric > 1e12 ? numeric : numeric * 1000;
+      return new Date(ms).toLocaleString("no-NO");
+    }
+
+    function statusPillClass(status) {
+      const normalized = String(status || "").toLowerCase();
+      if (["done", "ready", "running", "failed", "blocked"].includes(normalized)) {
+        return normalized;
+      }
+      return "";
+    }
+
+    function setBobHistoryResult(message, tone) {
+      const target = document.getElementById("bob-history-result");
+      target.textContent = message;
+      target.className = "action-result " + tone;
+    }
+
+    function clearBobHistoryResult() {
+      const target = document.getElementById("bob-history-result");
+      target.textContent = "";
+      target.className = "action-result";
+    }
+
+    function renderBobHistoryList(tasks) {
+      const wrap = document.getElementById("bob-history-list-wrap");
+      wrap.innerHTML = "";
+      if (!tasks.length) {
+        const empty = document.createElement("p");
+        empty.className = "bob-history-empty";
+        empty.textContent = "Ingen oppgaver på tavlen.";
+        wrap.appendChild(empty);
+        return;
+      }
+      const sorted = [...tasks].sort((a, b) => {
+        return (Number(b.created_at) || 0) - (Number(a.created_at) || 0);
+      });
+      const table = document.createElement("table");
+      table.className = "bob-history-table";
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tittel</th>
+            <th>Status</th>
+            <th>Opprettet</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      const body = table.querySelector("tbody");
+      for (const task of sorted) {
+        const row = document.createElement("tr");
+        const status = task.status || "—";
+        row.innerHTML = `
+          <td><code>${task.id || "—"}</code></td>
+          <td>${task.title || "—"}</td>
+          <td><span class="status-pill ${statusPillClass(status)}">${status}</span></td>
+          <td>${formatUnixTime(task.created_at)}</td>
+          <td></td>
+        `;
+        const actionCell = row.lastElementChild;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "linkish";
+        btn.textContent = "Vis detaljer";
+        btn.addEventListener("click", () => loadBobTaskDetail(task.id));
+        actionCell.appendChild(btn);
+        body.appendChild(row);
+      }
+      wrap.appendChild(table);
+    }
+
+    function renderBobTaskDetail(payload) {
+      const panel = document.getElementById("bob-history-detail");
+      const task = payload.task || {};
+      panel.hidden = false;
+      document.getElementById("bob-detail-title").textContent =
+        task.title || payload.task_id || "Oppgavedetaljer";
+      const rows = [
+        ["Task ID", payload.task_id || task.id],
+        ["Status", task.status],
+        ["Opprettet", formatUnixTime(task.created_at)],
+        ["Startet", formatUnixTime(task.started_at)],
+        ["Fullført", formatUnixTime(task.completed_at)],
+        ["Resultat", task.result || "—"],
+      ];
+      if (task.body) {
+        rows.push(["Beskrivelse", task.body]);
+      }
+      rows.push(["Hendelser", String((payload.events || []).length)]);
+      rows.push(["Kommentarer", String((payload.comments || []).length)]);
+      setMeta("bob-detail-meta", rows);
+      setJson("bob-detail-json", payload);
+    }
+
+    async function loadBobTaskDetail(taskId) {
+      if (!bobTasksEnabled || !taskId) {
+        return;
+      }
+      clearBobHistoryResult();
+      const result = await fetchJson(`/api/bob/tasks/${encodeURIComponent(taskId)}`);
+      if (!result.ok) {
+        setBobHistoryResult(result.error || "Kunne ikke hente detaljer", "bad");
+        return;
+      }
+      renderBobTaskDetail(result.data);
+      document.getElementById("bob-history-detail").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    async function loadBobHistory() {
+      if (!bobTasksEnabled) {
+        return;
+      }
+      const meta = document.getElementById("bob-history-meta");
+      const refreshBtn = document.getElementById("bob-history-refresh");
+      refreshBtn.disabled = true;
+      clearBobHistoryResult();
+      meta.textContent = "Henter oppgaver...";
+
+      const result = await fetchJson("/api/bob/tasks?limit=20");
+      refreshBtn.disabled = false;
+      if (!result.ok) {
+        meta.textContent = "Kunne ikke hente oppgaver";
+        setBobHistoryResult(result.error || "Liste feilet", "bad");
+        return;
+      }
+
+      const data = result.data;
+      meta.textContent = `${data.count} oppgaver · sist sjekket ${formatUnixTime(data.checked_at)}`;
+      renderBobHistoryList(data.tasks || []);
     }
 
     async function submitBobTask(event) {
@@ -512,6 +739,7 @@ DASHBOARD_HTML = """\
       titleInput.value = "";
       bodyInput.value = "";
       submitBtn.disabled = false;
+      await loadBobHistory();
     }
 
     function setActionResult(message, tone) {
@@ -733,6 +961,7 @@ DASHBOARD_HTML = """\
       }
     });
     document.getElementById("bob-task-form").addEventListener("submit", submitBobTask);
+    document.getElementById("bob-history-refresh").addEventListener("click", loadBobHistory);
     loadDashboard();
   </script>
 </body>
