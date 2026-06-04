@@ -16,8 +16,14 @@ grep -R "@app.route\\|@.*route" backend/ || true
 
 ## Bob checks
 
-Pending:
+- PASS — deployed commit `2cb394a` to Bob with fast-forward pull.
+- PASS — restarted Hermes UI LaunchAgent with `launchctl kickstart -k gui/$(id -u)/no.truls.hermes-ui`.
+- PASS — `/api/status`: `ok`, `allow_bob_tasks=True`, `bob_task_assignee=default`.
+- PASS — Bob repo status clean on `main...origin/main`.
+- LIMITED — `/api/bob/tasks/t_7b978d4f` returned no `artifacts` because `/Users/trulsdahl/.hermes/kanban/workspaces/t_7b978d4f` no longer exists on Bob.
 
-- Deploy to Bob.
-- Confirm `/api/bob/tasks/t_7b978d4f` includes `artifacts[0].relative_path=morgenbrief.md`.
-- Confirm dashboard detail renders `Artifakter` and `Kopier artifakt`.
+Outcome:
+
+- Safe artifact visibility is implemented and covered locally, including path escape rejection.
+- Historical artifact UAT against `t_7b978d4f` could not render because the worker workspace has been removed.
+- Next real Bob task that keeps a metadata `file_path` under its workspace and within size/suffix limits should show `Artifakter` and `Kopier artifakt` in task detail.
