@@ -254,24 +254,37 @@ DASHBOARD_HTML = """\
     .bob-template-intro {
       margin-bottom: 10px;
     }
-    .bob-template-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .bob-template-list {
+      display: grid;
+      gap: 14px;
     }
-    .bob-template-btn {
+    .bob-template-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: var(--card);
+    }
+    .bob-template-item h4 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+    }
+    .bob-template-item .field {
+      margin-bottom: 10px;
+    }
+    .bob-template-send-btn {
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 8px 14px;
       font: inherit;
-      background: var(--card);
+      background: #f8fafc;
       cursor: pointer;
     }
-    .bob-template-btn:hover:not(:disabled) {
+    .bob-template-send-btn:hover:not(:disabled) {
       border-color: #94a3b8;
-      background: #f8fafc;
+      background: #fff;
     }
-    .bob-template-btn:disabled {
+    .bob-template-send-btn:disabled,
+    .bob-template-input:disabled {
       opacity: 0.65;
       cursor: not-allowed;
     }
@@ -517,14 +530,54 @@ DASHBOARD_HTML = """\
       <div id="bob-task-templates" class="bob-task-templates" hidden>
         <h3>Bob task-maler</h3>
         <p class="bob-intro bob-template-intro">
-          Send vanlige oppgaver til Bob med ett klikk — samme asynkrone kanban-flyt som skjemaet under.
+          Fyll eventuelt inn felter under og send mal til Bob — samme asynkrone kanban-flyt som skjemaet under.
         </p>
-        <div id="bob-template-buttons" class="bob-template-grid">
-          <button type="button" class="bob-template-btn" data-template-id="morgenbrief">Morgenbrief</button>
-          <button type="button" class="bob-template-btn" data-template-id="ukesrapport">Ukesrapport</button>
-          <button type="button" class="bob-template-btn" data-template-id="konkurrentanalyse">Konkurrentanalyse</button>
-          <button type="button" class="bob-template-btn" data-template-id="nettsideanalyse">Nettsideanalyse</button>
-          <button type="button" class="bob-template-btn" data-template-id="markedsforing">Markedsføringsstatus</button>
+        <div id="bob-template-list" class="bob-template-list">
+          <div class="bob-template-item" data-template-id="morgenbrief">
+            <h4>Morgenbrief</h4>
+            <div class="field">
+              <label for="bob-template-input-morgenbrief">Fokus for dagen</label>
+              <input type="text" class="bob-template-input" id="bob-template-input-morgenbrief"
+                maxlength="300" placeholder="Valgfritt fokus" autocomplete="off" />
+            </div>
+            <button type="button" class="bob-template-send-btn" data-template-id="morgenbrief">Send mal til Bob</button>
+          </div>
+          <div class="bob-template-item" data-template-id="ukesrapport">
+            <h4>Ukesrapport</h4>
+            <div class="field">
+              <label for="bob-template-input-ukesrapport">Periode</label>
+              <input type="text" class="bob-template-input" id="bob-template-input-ukesrapport"
+                maxlength="300" placeholder="f.eks. uke 23 eller denne uken" autocomplete="off" />
+            </div>
+            <button type="button" class="bob-template-send-btn" data-template-id="ukesrapport">Send mal til Bob</button>
+          </div>
+          <div class="bob-template-item" data-template-id="konkurrentanalyse">
+            <h4>Konkurrentanalyse</h4>
+            <div class="field">
+              <label for="bob-template-input-konkurrentanalyse">Konkurrent eller tema</label>
+              <input type="text" class="bob-template-input" id="bob-template-input-konkurrentanalyse"
+                maxlength="300" placeholder="Valgfritt fokus" autocomplete="off" />
+            </div>
+            <button type="button" class="bob-template-send-btn" data-template-id="konkurrentanalyse">Send mal til Bob</button>
+          </div>
+          <div class="bob-template-item" data-template-id="nettsideanalyse">
+            <h4>Nettsideanalyse</h4>
+            <div class="field">
+              <label for="bob-template-input-nettsideanalyse">URL som skal analyseres</label>
+              <input type="text" class="bob-template-input" id="bob-template-input-nettsideanalyse"
+                maxlength="300" placeholder="https://…" autocomplete="off" />
+            </div>
+            <button type="button" class="bob-template-send-btn" data-template-id="nettsideanalyse">Send mal til Bob</button>
+          </div>
+          <div class="bob-template-item" data-template-id="markedsforing">
+            <h4>Markedsføringsstatus</h4>
+            <div class="field">
+              <label for="bob-template-input-markedsforing">Fokusområde</label>
+              <input type="text" class="bob-template-input" id="bob-template-input-markedsforing"
+                maxlength="300" placeholder="Valgfritt fokus" autocomplete="off" />
+            </div>
+            <button type="button" class="bob-template-send-btn" data-template-id="markedsforing">Send mal til Bob</button>
+          </div>
         </div>
       </div>
       <form class="bob-form" id="bob-task-form" hidden>
@@ -706,6 +759,39 @@ DASHBOARD_HTML = """\
           "Lag en kort status for markedsføring med pågående aktiviteter, flaskehalser, prioriterte tiltak og forslag til hva Truls bør følge opp først.",
       },
     ];
+
+    function trimBobTemplateInput(value) {
+      return String(value == null ? "" : value).trim();
+    }
+
+    function buildBobTaskTemplatePayload(templateId, rawInput) {
+      const template = BOB_TASK_TEMPLATES.find((item) => item.id === templateId);
+      if (!template) {
+        return null;
+      }
+      const input = trimBobTemplateInput(rawInput);
+      let body = template.body;
+
+      if (templateId === "morgenbrief" && input) {
+        body = `${body}\n\nDagens fokus: ${input}`;
+      } else if (templateId === "ukesrapport") {
+        const period = input || "denne uken";
+        body = `Lag en ukesrapport for Truls for ${period} med oppsummering av viktig arbeid, åpne punkter, risikoer og anbefalte neste steg.`;
+      } else if (templateId === "konkurrentanalyse" && input) {
+        body = `${body}\n\nKonkurrent eller tema: ${input}`;
+      } else if (templateId === "nettsideanalyse" && input) {
+        body = `${body}\n\nURL som skal analyseres: ${input}`;
+      } else if (templateId === "markedsforing" && input) {
+        body = `${body}\n\nFokusområde: ${input}`;
+      }
+
+      return { title: template.title, body };
+    }
+
+    function getBobTemplateInputValue(templateId) {
+      const input = document.getElementById(`bob-template-input-${templateId}`);
+      return input ? input.value : "";
+    }
     let bobTasksCache = [];
     let bobHighlightTaskId = null;
     let bobHighlightTimer = null;
@@ -844,8 +930,11 @@ DASHBOARD_HTML = """\
       if (submitBtn) {
         submitBtn.disabled = disabled;
       }
-      document.querySelectorAll(".bob-template-btn").forEach((btn) => {
+      document.querySelectorAll(".bob-template-send-btn").forEach((btn) => {
         btn.disabled = disabled;
+      });
+      document.querySelectorAll(".bob-template-input").forEach((input) => {
+        input.disabled = disabled;
       });
     }
 
@@ -1159,16 +1248,23 @@ DASHBOARD_HTML = """\
       if (!template || !bobTasksEnabled) {
         return;
       }
-      const btn = document.querySelector(
-        `.bob-template-btn[data-template-id="${templateId}"]`
+      const payload = buildBobTaskTemplatePayload(
+        templateId,
+        getBobTemplateInputValue(templateId)
       );
-      const prevLabel = btn ? btn.textContent : template.label;
+      if (!payload) {
+        return;
+      }
+      const btn = document.querySelector(
+        `.bob-template-send-btn[data-template-id="${templateId}"]`
+      );
+      const prevLabel = btn ? btn.textContent : "Send mal til Bob";
       if (btn) {
         btn.textContent = "Sender …";
       }
       await submitBobTaskPayload({
-        title: template.title,
-        body: template.body,
+        title: payload.title,
+        body: payload.body,
         clearForm: false,
         successLead: "Oppgave sendt til Bob.",
       });
@@ -1411,7 +1507,7 @@ DASHBOARD_HTML = """\
       }
     });
     document.getElementById("bob-task-form").addEventListener("submit", submitBobTask);
-    document.querySelectorAll(".bob-template-btn").forEach((btn) => {
+    document.querySelectorAll(".bob-template-send-btn").forEach((btn) => {
       btn.addEventListener("click", () => sendBobTaskTemplate(btn.dataset.templateId));
     });
     document.getElementById("bob-history-refresh").addEventListener("click", () => {
