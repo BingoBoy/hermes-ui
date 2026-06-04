@@ -48,6 +48,20 @@ Bob binary path: `/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes`
 - Cooldown 60s (vs restart 30s)
 - Hide vs disable task form when gate off (implementer choice)
 
+## Preflight (2026-06-04)
+
+**Testmiljø:** `ModuleNotFoundError: backend` skyldtes at `pytest`-skriptet ikke la prosjektroten på `sys.path` (i motsetning til `python -m pytest`). Løst med `pytest.ini` → `pythonpath = .`.
+
+**Verifisert lokalt:**
+
+- `0a26a1e` på `main`
+- `.venv/bin/pytest` og `.venv/bin/python -m pytest` → 25 passed
+- Ingen `backend/bob_tasks.py`; ingen `POST /api/bob/tasks` i `backend/`
+- `test_only_allowlisted_write_route_exists` → kun `POST /api/hermes/restart`
+- Ingen `shell=True` i `backend/` (kun negativ assert i tester)
+
+**Gjenstår før 5C execute på Bob:** kanban create/list/show med Bob-binær (se `05C-PLAN.md` Preconditions).
+
 ## Next Step
 
-`/gsd-plan-phase 5C` or execute `05C-PLAN.md` (3 atomic tasks)
+Execute `05C-PLAN.md` (3 atomic tasks) etter Bob kanban-verify.

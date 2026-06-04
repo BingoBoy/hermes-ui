@@ -157,6 +157,23 @@ curl -s -X POST http://127.0.0.1:8787/api/hermes/restart
 # Forvent 403 når ALLOW_SERVICE_ACTIONS=false
 ```
 
+## Tester
+
+Kjør fra prosjektroten med prosjektets venv (ikke system-`python3` uten pytest):
+
+```bash
+source .venv/bin/activate
+python -m pytest
+```
+
+Uten aktivert venv:
+
+```bash
+.venv/bin/python -m pytest
+```
+
+`pytest.ini` setter `pythonpath = .` slik at `backend` importeres riktig — også når du kjører `.venv/bin/pytest` direkte.
+
 ## Verifisering
 
 ```bash

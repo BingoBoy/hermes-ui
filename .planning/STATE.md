@@ -160,7 +160,15 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 
 **Artifacts:** `.planning/phases/05C-bob-task-entry/`, updated `docs/api/bob-interaction.md`
 
-**Next:** Truls runs Bob kanban verify commands → `/gsd-execute-phase 5C` or manual 3-task plan
+**Next:** Truls runs Bob kanban verify commands → execute `05C-PLAN.md` (3 tasks)
+
+## Phase 5C Preflight (2026-06-04)
+
+**Testmiljø:** OK — `pytest.ini` med `pythonpath = .`; kjør `.venv/bin/python -m pytest` eller `.venv/bin/pytest` fra repo-roten (25 passed).
+
+**Runtime:** Ingen `backend/bob_tasks.py`; ingen `POST /api/bob/tasks` — klar for implementering etter Bob kanban CLI-verify.
+
+**Commit:** `chore: stabilize test preflight for Bob task entry`
 
 ## Open Gates
 
