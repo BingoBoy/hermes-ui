@@ -1212,6 +1212,27 @@ DASHBOARD_HTML = """\
       return normalizeBobStatus(status);
     }
 
+    function assigneeDisplayLabel(task) {
+      const assignee = task && typeof task.assignee === "string" ? task.assignee.trim() : "";
+      if (assignee) {
+        return assignee;
+      }
+      const status = normalizeBobStatus(task == null ? null : task.status);
+      if (status === "ready") {
+        return "Legacy unassigned";
+      }
+      return "Ikke tildelt";
+    }
+
+    function assigneePillClass(task) {
+      const assignee = task && typeof task.assignee === "string" ? task.assignee.trim() : "";
+      if (assignee) {
+        return "ok";
+      }
+      const status = normalizeBobStatus(task == null ? null : task.status);
+      return status === "ready" ? "warn" : "bad";
+    }
+
     function setBobHistoryResult(message, tone) {
       const target = document.getElementById("bob-history-result");
       target.textContent = message;
@@ -1246,6 +1267,7 @@ DASHBOARD_HTML = """\
             <th>ID</th>
             <th>Tittel</th>
             <th>Status</th>
+            <th>Assignee</th>
             <th>Opprettet</th>
             <th>Startet</th>
             <th>Fullført</th>
@@ -1266,6 +1288,7 @@ DASHBOARD_HTML = """\
           `<td><code>${escapeHtml(task.id || "—")}</code></td>`,
           `<td>${escapeHtml(task.title || "—")}</td>`,
           `<td><span class="status-pill ${statusPillClass(task.status)}">${escapeHtml(statusLabel)}</span></td>`,
+          `<td><span class="badge ${assigneePillClass(task)}">${escapeHtml(assigneeDisplayLabel(task))}</span></td>`,
           `<td>${escapeHtml(formatUnixTime(task.created_at))}</td>`,
           `<td>${escapeHtml(formatUnixTime(task.started_at))}</td>`,
           `<td>${escapeHtml(formatUnixTime(task.completed_at))}</td>`,

@@ -86,6 +86,8 @@ def test_dashboard_includes_bob_task_history_ui() -> None:
     assert "bob-history-refresh" in body
     assert "bob-auto-refresh-toggle" in body
     assert "Auto-oppdater oppgaver" in body
+    assert "assigneeDisplayLabel" in body
+    assert "Legacy unassigned" in body
     assert "status-pill.completed" in body
     assert "normalizeBobStatus" in body
 
