@@ -17,6 +17,8 @@ def test_api_status_returns_read_only_service_status() -> None:
     assert payload["bind_port"] == 8787
     assert payload["read_only"] is True
     assert payload["allow_unsafe_commands"] is False
+    assert payload["allow_service_actions"] is False
+    assert payload["capabilities"]["restart_hermes_gateway"] is False
 
 
 def test_api_system_returns_safe_system_payload() -> None:
@@ -53,8 +55,15 @@ def test_dashboard_returns_read_only_status_ui() -> None:
     assert "log-view" in body
 
 
-def test_no_write_action_routes_exist() -> None:
-    forbidden_terms = {"start", "stop", "restart", "terminal", "shell", "command"}
+def test_only_allowlisted_write_route_exists() -> None:
+    forbidden_paths = {
+        "/api/hermes/start",
+        "/api/hermes/stop",
+        "/api/terminal",
+        "/api/shell",
+        "/api/command",
+    }
+    forbidden_substrings = {"terminal", "shell", "command"}
     routes = [
         route
         for route in app.routes
@@ -62,9 +71,17 @@ def test_no_write_action_routes_exist() -> None:
         and not str(route.path).startswith(("/docs", "/redoc", "/openapi"))
     ]
 
+    write_routes: list[tuple[str, set[str]]] = []
     for route in routes:
-        methods = getattr(route, "methods", set())
-        path = str(route.path).lower()
-        assert methods <= {"GET", "HEAD"}
-        assert not any(term in path for term in forbidden_terms)
+        methods = set(getattr(route, "methods", set()) or set())
+        path = str(route.path)
+        path_lower = path.lower()
+
+        if methods - {"GET", "HEAD"}:
+            write_routes.append((path, methods))
+
+        assert path_lower not in forbidden_paths
+        assert not any(term in path_lower for term in forbidden_substrings)
+
+    assert write_routes == [("/api/hermes/restart", {"POST"})]
 

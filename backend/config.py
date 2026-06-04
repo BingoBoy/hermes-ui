@@ -24,6 +24,7 @@ class Settings:
     bob_hostname: str = ""
     hermes_launchd_label: str = "ai.hermes.gateway"
     allow_unsafe_commands: bool = False
+    allow_service_actions: bool = False
 
 
 def get_settings() -> Settings:
@@ -35,5 +36,6 @@ def get_settings() -> Settings:
         bob_hostname=os.getenv("BOB_HOSTNAME", ""),
         hermes_launchd_label=os.getenv("HERMES_LAUNCHD_LABEL", "ai.hermes.gateway"),
         allow_unsafe_commands=_env_bool("ALLOW_UNSAFE_COMMANDS", False),
+        allow_service_actions=_env_bool("ALLOW_SERVICE_ACTIONS", False),
     )
 

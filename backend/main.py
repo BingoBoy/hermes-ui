@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from backend.config import get_settings
 from backend.dashboard import render_dashboard
 from backend.log_sources import DEFAULT_LOG_LINES, MAX_LOG_LINES
 from backend.logs import get_log_content, get_logs_sources_payload
+from backend.service_actions import (
+    ActionNotAllowed,
+    CooldownActive,
+    ServiceActionsDisabled,
+    build_restart_response,
+)
 from backend.status import get_hermes_status, get_service_status, get_system_status
 
 app = FastAPI(
@@ -39,6 +45,45 @@ def api_system() -> dict:
 def api_hermes_status() -> dict:
     settings = get_settings()
     return get_hermes_status(settings)
+
+
+@app.post("/api/hermes/restart")
+def api_hermes_restart():
+    settings = get_settings()
+    try:
+        payload = build_restart_response(settings)
+    except ServiceActionsDisabled:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "service_actions_disabled",
+                "detail": "Write actions are disabled on this server",
+            },
+        ) from None
+    except CooldownActive as exc:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "success": False,
+                "error": "cooldown_active",
+                "detail": f"Restart was requested recently; try again in {exc.retry_after} seconds",
+                "retry_after": exc.retry_after,
+            },
+        ) from None
+    except ActionNotAllowed as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "success": False,
+                "error": "action_not_allowed",
+                "detail": str(exc),
+            },
+        ) from None
+
+    if not payload["success"]:
+        return JSONResponse(status_code=502, content=payload)
+    return payload
 
 
 @app.get("/api/logs/sources")

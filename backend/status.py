@@ -202,8 +202,12 @@ def get_service_status(settings: Settings) -> dict[str, Any]:
         "host": settings.bob_hostname or socket.gethostname(),
         "bind_host": settings.host,
         "bind_port": settings.port,
-        "read_only": True,
+        "read_only": not settings.allow_service_actions,
         "allow_unsafe_commands": settings.allow_unsafe_commands,
+        "allow_service_actions": settings.allow_service_actions,
+        "capabilities": {
+            "restart_hermes_gateway": settings.allow_service_actions,
+        },
         "checked_at": datetime.now(timezone.utc).isoformat(),
     }
 
