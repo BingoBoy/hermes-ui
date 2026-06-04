@@ -443,6 +443,49 @@ DASHBOARD_HTML = """\
       font-size: 0.88rem;
       margin: 0 0 8px;
       line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .bob-inbox-excerpt.bob-result-collapsed {
+      max-height: 4.5em;
+      overflow: hidden;
+    }
+    .bob-inbox-meta {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+    .bob-inbox-actions,
+    .bob-result-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 4px;
+    }
+    .bob-copy-btn {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.82rem;
+      background: var(--card);
+      cursor: pointer;
+    }
+    .bob-copy-btn:hover:not(:disabled) {
+      border-color: #94a3b8;
+      background: #f8fafc;
+    }
+    .bob-copy-btn:disabled {
+      opacity: 0.7;
+      cursor: default;
+    }
+    .bob-result-toggle {
+      margin: 4px 0 0;
+      padding: 0;
+    }
+    .bob-result-block.bob-result-collapsed {
+      max-height: 140px;
+      overflow: hidden;
     }
   </style>
 </head>
@@ -621,7 +664,11 @@ DASHBOARD_HTML = """\
           <dl class="meta" id="bob-detail-meta"></dl>
           <div id="bob-detail-result-wrap" hidden>
             <p class="log-meta" style="margin: 10px 0 4px;">Resultat</p>
+            <div class="bob-result-toolbar" id="bob-detail-result-toolbar"></div>
             <pre class="bob-result-block" id="bob-detail-result"></pre>
+            <button type="button" class="linkish bob-result-toggle" id="bob-detail-result-toggle" hidden>
+              Vis mer
+            </button>
           </div>
           <details><summary>Teknisk JSON</summary><pre id="bob-detail-json"></pre></details>
         </div>
@@ -799,6 +846,7 @@ DASHBOARD_HTML = """\
     let bobHistoryFailureCount = 0;
     const BOB_AUTO_REFRESH_MS = 12000;
     const BOB_INBOX_MAX_ITEMS = 8;
+    const BOB_RESULT_PREVIEW_LEN = 120;
 
     function escapeHtml(text) {
       const div = document.createElement("div");
@@ -870,10 +918,147 @@ DASHBOARD_HTML = """\
         return "";
       }
       const oneLine = formatted.replace(/\\s+/g, " ").trim();
-      if (oneLine.length <= 120) {
+      if (oneLine.length <= BOB_RESULT_PREVIEW_LEN) {
         return oneLine;
       }
-      return oneLine.slice(0, 117) + "...";
+      return oneLine.slice(0, BOB_RESULT_PREVIEW_LEN - 3) + "...";
+    }
+
+    function getTaskResultText(task) {
+      return formatResultValue(task == null ? null : task.result) || "";
+    }
+
+    async function copyTextToClipboard(text) {
+      const value = String(text == null ? "" : text);
+      if (!value) {
+        return false;
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(value);
+          return true;
+        }
+      } catch (_) {}
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        return ok;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function flashBobCopyFeedback(button, ok) {
+      const prev = button.textContent;
+      button.textContent = ok ? "Kopiert" : "Kunne ikke kopiere";
+      button.disabled = true;
+      setTimeout(() => {
+        button.textContent = prev;
+        button.disabled = false;
+      }, 1600);
+    }
+
+    function createBobCopyButton(label, getText) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "bob-copy-btn";
+      btn.textContent = label;
+      btn.addEventListener("click", async () => {
+        const ok = await copyTextToClipboard(getText());
+        flashBobCopyFeedback(btn, ok);
+      });
+      return btn;
+    }
+
+    function appendBobCopyActions(container, task, actionsClass) {
+      const useToolbarDirect =
+        actionsClass === "bob-result-toolbar" &&
+        container.classList &&
+        container.classList.contains("bob-result-toolbar");
+      const actions = useToolbarDirect
+        ? container
+        : document.createElement("div");
+      if (!useToolbarDirect) {
+        actions.className = actionsClass || "bob-inbox-actions";
+      }
+      const resultText = getTaskResultText(task);
+      if (resultText) {
+        actions.appendChild(
+          createBobCopyButton("Kopier resultat", () => resultText)
+        );
+      }
+      const taskId = task.id || "";
+      if (taskId) {
+        actions.appendChild(createBobCopyButton("Kopier ID", () => taskId));
+      }
+      const title = task.title || "";
+      if (title) {
+        actions.appendChild(createBobCopyButton("Kopier tittel", () => title));
+      }
+      if (!useToolbarDirect && actions.childElementCount) {
+        container.appendChild(actions);
+      }
+    }
+
+    function bindResultExpandToggle(toggleBtn, contentEl, fullText) {
+      if (!fullText || fullText.length <= BOB_RESULT_PREVIEW_LEN) {
+        toggleBtn.hidden = true;
+        contentEl.classList.remove("bob-result-collapsed");
+        contentEl.textContent = fullText || "";
+        return;
+      }
+      const isPre = contentEl.tagName === "PRE";
+      const compact = fullText.replace(/\\s+/g, " ").trim();
+      const shortPreview =
+        compact.length > BOB_RESULT_PREVIEW_LEN
+          ? compact.slice(0, BOB_RESULT_PREVIEW_LEN - 3) + "..."
+          : compact;
+      let expanded = false;
+      toggleBtn.hidden = false;
+      if (isPre) {
+        contentEl.textContent = fullText;
+        contentEl.classList.add("bob-result-collapsed");
+      } else {
+        contentEl.textContent = shortPreview;
+        contentEl.classList.add("bob-result-collapsed");
+      }
+      toggleBtn.textContent = "Vis mer";
+      toggleBtn.onclick = () => {
+        expanded = !expanded;
+        if (expanded) {
+          contentEl.classList.remove("bob-result-collapsed");
+          if (!isPre) {
+            contentEl.textContent = fullText;
+          }
+          toggleBtn.textContent = "Vis mindre";
+        } else {
+          contentEl.classList.add("bob-result-collapsed");
+          if (!isPre) {
+            contentEl.textContent = shortPreview;
+          }
+          toggleBtn.textContent = "Vis mer";
+        }
+      };
+    }
+
+    function inboxMetaLine(task) {
+      const parts = [];
+      if (task.id) {
+        parts.push(task.id);
+      }
+      if (task.completed_at) {
+        parts.push(`Fullført ${formatUnixTime(task.completed_at)}`);
+      } else if (task.created_at) {
+        parts.push(`Opprettet ${formatUnixTime(task.created_at)}`);
+      }
+      return parts.join(" · ");
     }
 
     function isInboxCandidate(task) {
@@ -1083,14 +1268,25 @@ DASHBOARD_HTML = """\
             <h4>${escapeHtml(task.title || task.id || "Uten tittel")}</h4>
             <span class="status-pill ${statusPillClass(task.status)}">${escapeHtml(statusLabel)}</span>
           </header>
-          <p class="log-meta"><code>${escapeHtml(task.id || "—")}</code></p>
+          <p class="bob-inbox-meta">${escapeHtml(inboxMetaLine(task))}</p>
         `;
-        if (excerpt) {
+        const resultText = getTaskResultText(task);
+        if (resultText) {
+          const excerptEl = document.createElement("p");
+          excerptEl.className = "bob-inbox-excerpt";
+          card.appendChild(excerptEl);
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "linkish bob-result-toggle";
+          bindResultExpandToggle(toggle, excerptEl, resultText);
+          card.appendChild(toggle);
+        } else if (excerpt) {
           const excerptEl = document.createElement("p");
           excerptEl.className = "bob-inbox-excerpt";
           excerptEl.textContent = excerpt;
           card.appendChild(excerptEl);
         }
+        appendBobCopyActions(card, task, "bob-inbox-actions");
         const actions = document.createElement("div");
         actions.className = "action-row";
         const btn = document.createElement("button");
@@ -1127,13 +1323,20 @@ DASHBOARD_HTML = """\
 
       const resultWrap = document.getElementById("bob-detail-result-wrap");
       const resultBlock = document.getElementById("bob-detail-result");
+      const resultToolbar = document.getElementById("bob-detail-result-toolbar");
+      const resultToggle = document.getElementById("bob-detail-result-toggle");
       const formattedResult = formatResultValue(task.result);
       if (formattedResult) {
         resultWrap.hidden = false;
         resultBlock.textContent = formattedResult;
+        resultToolbar.innerHTML = "";
+        appendBobCopyActions(resultToolbar, task, "bob-result-toolbar");
+        bindResultExpandToggle(resultToggle, resultBlock, formattedResult);
       } else {
         resultWrap.hidden = true;
         resultBlock.textContent = "";
+        resultToolbar.innerHTML = "";
+        resultToggle.hidden = true;
       }
       setJson("bob-detail-json", payload);
     }
