@@ -6,7 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 6D Template Inputs — **complete & UAT-verified** 2026-06-04 (strategistudio.no). Next: Phase 6 Operations Enrichment or backlog.
+**Current focus:** Phase 6D Template Inputs — **shipped** (PR #1, main deployed). Next: Phase 6 Operations Enrichment or backlog.
+
+**Last activity:** 2026-06-04 — `/gsd-ship 6D` → PR #1 created; work on `main` at `3411d83`.
 
 ## Workflow
 
@@ -237,4 +239,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after Phase 5A restart-only execute*
+*Last updated: 2026-06-04 after Phase 6D ship (PR #1)*
