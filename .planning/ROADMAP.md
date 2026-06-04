@@ -164,6 +164,20 @@
 - Bob-oppgaver: status badges, timestamps, auto-refresh, result panel
 - Bob Inbox: curated completed/failed/result tasks (client-side)
 
+## Phase 6C: Task Templates
+
+**Goal:** One-click predefined Bob task templates via existing `POST /api/bob/tasks`.
+
+**Status:** Complete locally 2026-06-04 — deploy to Bob pending
+
+**Scope:**
+
+- Frontend-only in `backend/dashboard.py`
+- Five hardcoded templates (morgenbrief, ukesrapport, konkurrentanalyse, nettside, markedsføring)
+- No new backend routes or CLI changes
+
+**Artifacts:** `.planning/phases/06C-task-templates/06C-CONTEXT.md`
+
 ## Phase 6: Operations Enrichment
 
 **Goal:** Add richer operational views for launchctl, Docker, and adjacent services where relevant.

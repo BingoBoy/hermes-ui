@@ -204,6 +204,14 @@ Sections on the dashboard (when `ALLOW_BOB_TASKS=true`):
 - Copy: creates an **async kanban task**, not live chat
 - On success: show `task_id` and `audit_id`
 
+### Bob task-maler (6C)
+
+- One-click buttons above the manual form (frontend-only, hardcoded prompts)
+- Same `POST /api/bob/tasks` with predefined `title` + `body` — no extra API fields or CLI flags
+- Templates: Morgenbrief, Ukesrapport, Konkurrentanalyse, Nettsideanalyse, Markedsføringsstatus
+- Hidden when `ALLOW_BOB_TASKS=false`
+- No terminal, chat, or user-defined templates
+
 ### Bob-oppgaver (5D + 6A)
 
 - Task table with status badges (ready, running, completed, failed, unknown)
@@ -239,6 +247,7 @@ Confirm JSON shape matches this document and dispatcher processes `ready` tasks.
 | 5C | POST `/api/bob/tasks` via kanban create |
 | 5D | GET task list/detail via kanban list/show | **Implemented** |
 | 6A–6B | Dashboard follow-up + Bob Inbox | **Implemented** (UI only) |
+| 6C | Bob task-maler (one-click templates) | **Implemented** (UI only) |
 
 ## Related Documents
 

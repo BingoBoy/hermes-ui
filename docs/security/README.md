@@ -108,6 +108,8 @@ Implementation rules:
 
 **Dashboard (6A–6B):** Bob Inbox and auto-refresh are client-side only — no new backend routes or CLI argv.
 
+**Task templates (6C):** «Bob task-maler» send only allowlisted `title` + `body` via existing `POST /api/bob/tasks`. Prompts are hardcoded in `backend/dashboard.py` — no server template registry, no client CLI flags, no new write routes.
+
 Before adding logs:
 
 1. Verify actual log paths.

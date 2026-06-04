@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 5A complete — restart-only service action; Phase 5B next
+**Current focus:** Phase 6C Task Templates — executed locally; deploy to Bob + `/gsd-verify-work 6C`
 
 ## Workflow
 
