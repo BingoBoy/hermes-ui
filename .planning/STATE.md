@@ -147,10 +147,25 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 
 **Bob deploy gate:** set `ALLOW_SERVICE_ACTIONS=true` in local `.env`, restart Hermes UI LaunchAgent, test restart via dashboard.
 
+## Phase 5C Discuss (2026-06-04)
+
+**Scope:** Plan Bob task entry via `hermes kanban create` — no runtime code in discuss.
+
+**Locked:**
+
+- `POST /api/bob/tasks` with `{title, body}`; gate `ALLOW_BOB_TASKS=false`
+- Fixed argv `create_kanban_task`; server idempotency key; 60s cooldown
+- Audit `bob-interactions.log` (title hash, not full body)
+- CLI contract verified **locally**; Bob re-verify required before execute
+
+**Artifacts:** `.planning/phases/05C-bob-task-entry/`, updated `docs/api/bob-interaction.md`
+
+**Next:** Truls runs Bob kanban verify commands → `/gsd-execute-phase 5C` or manual 3-task plan
+
 ## Open Gates
 
 - Live-verify bootstrap/bootout before implementing start/stop (5B).
-- Live-verify `hermes kanban create` JSON contract before Bob task API (5C).
+- Live-verify `hermes kanban create` JSON contract **on Bob** before enabling `ALLOW_BOB_TASKS` (5C execute).
 - Set `ALLOW_SERVICE_ACTIONS=true` on Bob only when ready to test 5A execute.
 - Log display remains server-side allowlisted only.
 - Keep real `.env` out of git.
@@ -169,6 +184,7 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - Phase 4 deployed and documented Cloudflare Tunnel and Access exposure.
 - Phase 4.5 improved read-only dashboard UX for daily operations.
 - Phase 5 discuss mapped service actions and Bob entry; restart kickstart live-verified; 5A execute implemented locally.
+- Phase 5C discuss locked kanban create API/UI/security; local CLI JSON verified; Bob verify pending before execute.
 
 ## Phase 4.5 Verification
 

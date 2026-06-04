@@ -83,13 +83,28 @@ Implementation rules:
 - Audit log: `/Users/trulsdahl/.hermes-ui/logs/service-actions.log` (JSONL).
 - See `docs/api/service-actions.md` for API contract.
 
-## Gates Before Bob Task Entry (5C)
+## Bob Task Entry (Phase 5C — planned)
 
-1. Verify `hermes kanban create --json` contract on Bob.
-2. Define input length limits and idempotency behavior.
-3. Add `ALLOW_BOB_TASKS=false` feature gate.
-4. Audit interactions separately from service actions.
-5. See `docs/api/bob-interaction.md`.
+**Status:** Discuss/plan complete 2026-06-04 — execute pending.
+
+| Control | Rule |
+|---------|------|
+| Feature gate | `ALLOW_BOB_TASKS=false` by default (independent of `ALLOW_SERVICE_ACTIONS`) |
+| Allowlisted action | `create_kanban_task` only |
+| CLI entry | Fixed argv: `hermes kanban create <title> [--body <body>] --idempotency-key <server-uuid> --json` |
+| Subprocess | `subprocess.run(..., shell=False)` — never `shell=True` |
+| Client input | `title` + `body` only — no CLI flags, paths, or shell commands |
+| Input limits | Title max 200 chars, no newlines; body max 4000 chars |
+| Idempotency | Server-generated UUID per submit — not from client |
+| Cooldown | 60s between successful creates |
+| Audit | `/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log` (JSONL); log `title_hash` + `body_length`, not full body |
+| Rejected | `hermes -z`, `hermes chat`, browser terminal, `hermes send`, arbitrary CLI flags |
+
+**API:** `POST /api/bob/tasks` → 403 when gate off, 400 invalid input, 429 cooldown, 202 on success.
+
+**Bob verification gate:** Re-run kanban create/list/show on Bob before enabling `ALLOW_BOB_TASKS=true`. See `docs/api/bob-interaction.md`.
+
+**Not in 5C:** read-only task list (`GET /api/bob/tasks`) — Phase 5D.
 
 Before adding logs:
 

@@ -125,7 +125,7 @@
 |----|------|------|--------|
 | 5A | Restart-only action | POST restart with audit, confirmation, feature gate | Complete locally — Bob deploy pending |
 | 5B | Start/stop actions | bootstrap/bootout after live verification | Blocked |
-| 5C | Bob task entry | kanban create wrapper API | Blocked on 5A + kanban verify |
+| 5C | Bob task entry | kanban create wrapper API | **Discuss complete** — execute blocked on Bob kanban verify |
 | 5D | Response/history view | Read-only kanban list/show | Blocked on 5C |
 
 **Success criteria:**
@@ -148,6 +148,8 @@
 **Planning artifacts:**
 - `.planning/phases/05-verified-service-actions/05-CONTEXT.md`
 - `.planning/phases/05-verified-service-actions/05-PLAN.md`
+- `.planning/phases/05C-bob-task-entry/05C-CONTEXT.md`
+- `.planning/phases/05C-bob-task-entry/05C-PLAN.md`
 - `docs/api/service-actions.md`
 - `docs/api/bob-interaction.md`
 

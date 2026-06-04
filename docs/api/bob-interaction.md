@@ -1,188 +1,232 @@
-# Bob Interaction API (Planned)
+# Bob Interaction API
 
-How Hermes UI can safely submit a bounded task to Bob/Hermes without a browser terminal or arbitrary command runner.
+How Hermes UI submits a bounded asynchronous task to Bob via Hermes kanban — no browser terminal, chat, or arbitrary CLI.
 
-**Status:** Planning only — not implemented until Phase 5C execute.
+**Status:** Phase 5C planned — `POST /api/bob/tasks` not implemented until execute.
 
 ## Goal
 
-Let Truls send a simple text task from Hermes UI and later see status or outcome, while keeping:
+Let Truls send a title + body from the Access-protected dashboard. The backend runs a **fixed** `hermes kanban create` argv list. Bob's kanban dispatcher executes the task asynchronously.
 
-- No free shell in the browser
-- No client-defined commands
-- No secrets in requests or responses
-- Cloudflare Access as outer auth layer
-
-## What Was Mapped on Bob (2026-06-04)
-
-| Mechanism | Safe for UI? | Notes |
-|-----------|--------------|-------|
-| Hermes Gateway HTTP API | No | Gateway runs as launchd process; no dedicated listen port found for UI ingress |
-| Telegram / messaging gateway | Indirect | Inbound via configured channels; not a UI-native API |
-| `hermes send` | No (wrong direction) | Outbound notifications to Telegram/Discord/Slack — scripts/CI use case |
-| `hermes chat -q "..." -Q` | Caution | Single programmatic query; agent loop with tools — needs strict caps |
-| `hermes -z "..."` | No | Oneshot with approval bypass — too permissive for web UI |
-| `hermes kanban create` | **Yes (preferred)** | Durable task queue, bounded title/body, idempotency key, async dispatch |
-| `hermes webhook subscribe` | Later | Event-driven; requires Hermes webhook HTTP surface setup |
-| `hermes sessions list` | Read-only (5D) | History inspection for completed work |
-
-Hermes CLI path on Bob:
+## Hermes CLI Path (Bob)
 
 ```text
 /Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes
 ```
 
-## Recommended Architecture (5C)
+At execute time, Hermes UI reads `HERMES_CLI_BIN` (default above). The client never supplies the binary path.
+
+## Kanban CLI Contract
+
+Verified locally on 2026-06-04. **Re-verify on Bob** before deploy (see Preconditions in `.planning/phases/05C-bob-task-entry/05C-PLAN.md`).
+
+### `kanban create`
+
+**Syntax:**
+
+```bash
+hermes kanban create <title> [--body BODY] [--idempotency-key KEY] [--json]
+```
+
+**Hermes UI fixed argv (allowlisted action `create_kanban_task`):**
+
+```text
+hermes kanban create <title> --body <body> --idempotency-key <server-uuid> --json
+```
+
+When body is empty after trim, omit `--body` and its value.
+
+| Aspect | Value |
+|--------|--------|
+| Success exit code | `0` |
+| Success stdout | Single JSON object |
+| Duplicate key | Same JSON as original task, exit `0` |
+| Missing title | Argparse error on stderr, exit `2` |
+| Recommended timeout | 30s (`shell=False`) |
+
+**Success JSON (example):**
+
+```json
+{
+  "id": "t_06aa482f",
+  "title": "Hermes UI planning test",
+  "body": "Planning verification only",
+  "assignee": null,
+  "status": "ready",
+  "priority": 0,
+  "created_at": 1780560167,
+  "started_at": null,
+  "completed_at": null,
+  "result": null
+}
+```
+
+API maps `id` → `task_id`, `status` → `status`.
+
+### `kanban list` (Phase 5D — read-only)
+
+```bash
+hermes kanban list --json
+```
+
+| Aspect | Value |
+|--------|--------|
+| Success exit code | `0` |
+| Success stdout | JSON **array** of task objects (same shape as create) |
+
+Backend will slice to a server-side max (e.g. 20) — no client `--status` flags in v1.
+
+### `kanban show` (Phase 5D — read-only)
+
+```bash
+hermes kanban show <task_id> --json
+```
+
+| Aspect | Value |
+|--------|--------|
+| Success exit code | `0` |
+| Success stdout | Object with `task`, `comments`, `events`, `runs`, … |
+| Missing task | Prints `no such task: <id>` (often stderr) with exit **`0`** — parser must detect text, not exit code alone |
+
+## Rejected Entry Points
+
+| Mechanism | Use in UI? | Reason |
+|-----------|------------|--------|
+| Gateway HTTP API | No | No UI-facing listen port |
+| `hermes send` | No | Outbound notifications only |
+| `hermes chat -q -Q` | No (5C) | Agent loop / tools — higher risk |
+| `hermes -z` | No | Approval bypass |
+| Browser terminal | No | Security policy |
+| Client CLI flags | No | Allowlist violation |
+
+## Architecture (5C)
 
 ```text
 Browser (Cloudflare Access)
-    → POST /api/bob/tasks  (Hermes UI backend)
-    → fixed argv: hermes kanban create "<title>" --body "<body>" --idempotency-key <uuid> --json
-    → kanban.db / dispatcher on Bob
-    → read-only poll: GET /api/bob/tasks/{id}  (5D)
-    → fixed argv: hermes kanban show <id> --json
+  → POST /api/bob/tasks  { title, body }
+  → Hermes UI backend (127.0.0.1:8787)
+  → subprocess: fixed hermes kanban create argv
+  → ~/.hermes kanban.db + gateway dispatcher
 ```
 
-### Why kanban first
+Read-only status (5D): `GET /api/bob/tasks`, `GET /api/bob/tasks/{id}` → `kanban list/show --json`.
 
-- **Async by design** — UI submits task, polls status; no long HTTP hold open.
-- **Idempotency** — `--idempotency-key` prevents duplicate submits on refresh/retry.
-- **Bounded input** — title + body only; no arbitrary CLI flags from client.
-- **Existing infrastructure** — `kanban.db` already present under `~/.hermes/`.
-- **Audit-friendly** — kanban maintains task events and comments.
+## API: POST /api/bob/tasks (planned)
 
-### Alternative: synchronous chat query (5C-b, optional)
-
-```text
-POST /api/bob/query
-→ hermes chat -q "<prompt>" -Q --max-turns 1
-```
-
-Constraints if used:
-
-- Max prompt length 2000 chars
-- No `--yolo`, no `--accept-hooks`, no model/provider from client
-- Timeout 120s with safe partial response handling
-- Higher risk than kanban — defer unless kanban latency is unacceptable
-
-## Planned Endpoints
-
-### POST /api/bob/tasks (5C)
-
-Submit a bounded task to Bob.
-
-**Request body (planned):**
+**Request:**
 
 ```json
 {
   "title": "Summarize inbox triage rules",
-  "body": "Review current mail triage skill and list gaps.",
-  "idempotency_key": "550e8400-e29b-41d4-a716-446655440000"
+  "body": "Review current mail triage skill and list gaps."
 }
 ```
 
 **Validation:**
 
-| Field | Max length | Rules |
-|-------|------------|-------|
-| `title` | 200 | Required, no newlines |
-| `body` | 4000 | Optional, plain text |
-| `idempotency_key` | 64 | UUID format, server-generated if omitted |
+| Field | Max | Rules |
+|-------|-----|-------|
+| `title` | 200 | Required; no `\n` or `\r`; trimmed |
+| `body` | 4000 | Optional; plain text; trimmed |
 
-**Success response (202):**
+**Responses:**
+
+| Code | When |
+|------|------|
+| 202 | Task created (or idempotent hit); body includes `task_id`, `status`, `audit_id` |
+| 400 | Validation failed |
+| 403 | `ALLOW_BOB_TASKS=false` |
+| 429 | Cooldown active (`retry_after` seconds) |
+| 502 | CLI failed or stdout not valid JSON |
+
+**Success example (202):**
 
 ```json
 {
   "success": true,
-  "task_id": "t42",
-  "status": "todo",
+  "task_id": "t_06aa482f",
+  "status": "ready",
   "title": "Summarize inbox triage rules",
-  "submitted_at": "2026-06-04T11:00:00+00:00",
-  "audit_id": "2026-06-04T11:00:00Z-task-xyz"
+  "submitted_at": "2026-06-04T12:00:00+00:00",
+  "audit_id": "2026-06-04T12:00:00Z-create_kanban_task-a1b2c3d4"
 }
 ```
 
-### GET /api/bob/tasks (5D)
-
-List recent tasks (read-only, bounded).
-
-**Query:** `limit=20` (max 50)
-
-Backend runs fixed `hermes kanban list --json`, parses and redacts output.
-
-### GET /api/bob/tasks/{task_id} (5D)
-
-Task detail with comments/events.
-
-Backend runs fixed `hermes kanban show {task_id} --json`.
-
-## Audit Logging (Bob Interactions)
-
-Separate log or shared audit file:
-
-```text
-/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log
-```
-
-Each entry:
+**403 example:**
 
 ```json
 {
-  "timestamp": "2026-06-04T11:00:00+00:00",
-  "audit_id": "2026-06-04T11:00:00Z-task-xyz",
-  "action": "kanban_create",
-  "task_id": "t42",
-  "title_hash": "sha256:...",
-  "success": true
+  "success": false,
+  "detail": "Bob task entry is disabled"
 }
 ```
 
-Do not log full body if it may contain sensitive content — store hash + length only, or redact PII per `backend/redaction.py`.
+Idempotency key is **server-generated** (UUID per submit). Not accepted from the client in v1.
 
-## Input and Output Safety
+## Security Model
 
-- All Hermes CLI output passes through `redaction.py` before JSON response.
-- No raw `~/.hermes/.env`, `config.yaml`, or session DB paths exposed.
-- Fail closed on CLI errors — structured safe `detail`, no tracebacks.
-- Feature gate: `ALLOW_BOB_TASKS=false` (default) — parallel to `ALLOW_SERVICE_ACTIONS`.
+| Control | Value |
+|---------|--------|
+| Feature gate | `ALLOW_BOB_TASKS=false` (default) |
+| Allowlisted action | `create_kanban_task` only |
+| Subprocess | `shell=False`, fixed argv |
+| Cooldown | 60s between successful creates |
+| Audit log | `/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log` (JSONL) |
+| Audit content | `title_hash`, `body_length` — not full body |
+| Output redaction | `backend/redaction.py` on stderr snippets |
 
-## Explicitly Out of Scope
+Independent of `ALLOW_SERVICE_ACTIONS` (gateway restart).
 
-- Chat UI / streaming tokens
-- Browser terminal
-- Client-specified Hermes flags (`--yolo`, `--skills`, model overrides)
-- Direct Telegram send from UI
-- Exposing Hermes internal config or credentials
+## Audit Entry (planned)
 
-## Verification Required Before 5C Execute
+```json
+{
+  "timestamp": "2026-06-04T12:00:00+00:00",
+  "audit_id": "2026-06-04T12:00:00Z-create_kanban_task-a1b2c3d4",
+  "action": "create_kanban_task",
+  "task_id": "t_06aa482f",
+  "title_hash": "sha256:…",
+  "body_length": 42,
+  "success": true,
+  "exit_code": 0
+}
+```
 
-On Bob, in a safe test window:
+## UI (planned)
+
+Section **«Send oppgave til Bob»** on the dashboard:
+
+- Title field, body textarea
+- Copy: creates an **async kanban task**, not live chat
+- On success: show `task_id` and `audit_id`
+- On error: show safe API `detail`
+- Form hidden or disabled when `ALLOW_BOB_TASKS=false`
+
+## Bob Verification Checklist (before execute)
 
 ```bash
 HERMES=/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes
+KEY="hermes-ui-bob-verify-$(date +%s)"
 
-# Create dry-run task
-$HERMES kanban create "Hermes UI test task" --body "Planning verification only" --json
+$HERMES kanban create "Hermes UI Bob verify" --body "Safe test" \
+  --idempotency-key "$KEY" --json
 
-# List and show
 $HERMES kanban list --json | head
 $HERMES kanban show <id> --json
-
-# Confirm dispatcher behavior (optional)
-$HERMES kanban dispatch --help
 ```
 
-Document exit codes, JSON schema, and whether kanban dispatcher auto-runs or needs manual `kanban dispatch`.
+Confirm JSON shape matches this document and dispatcher processes `ready` tasks.
 
-## Sub-Phase Mapping
+## Sub-Phases
 
 | Phase | Deliverable |
 |-------|-------------|
 | 5C | POST `/api/bob/tasks` via kanban create |
-| 5D | GET task list/detail + optional sessions summary |
+| 5D | GET task list/detail via kanban list/show |
 
 ## Related Documents
 
-- `docs/api/service-actions.md` — gateway restart (Track A)
-- `docs/security/README.md` — write-action gates
-- `.planning/phases/05-verified-service-actions/05-CONTEXT.md` — locked decisions
+- `docs/api/service-actions.md` — gateway restart (5A)
+- `docs/security/README.md` — gates and audit
+- `.planning/phases/05C-bob-task-entry/05C-CONTEXT.md` — locked decisions
+- `.planning/phases/05-verified-service-actions/05-CONTEXT.md` — parent phase Bob mapping
