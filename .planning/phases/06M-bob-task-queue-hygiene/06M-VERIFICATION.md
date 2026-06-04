@@ -16,8 +16,12 @@ grep -R "@app.route\\|@.*route" backend/ || true
 
 ## Bob checks
 
-Pending:
+- PASS — deployed commit `1cd4e06` to Bob with fast-forward pull.
+- PASS — restarted Hermes UI LaunchAgent with `launchctl kickstart -k gui/$(id -u)/no.truls.hermes-ui`.
+- PASS — Bob dashboard HTML includes `Assignee`, `Legacy unassigned`, and `assigneeDisplayLabel`.
+- PASS — Bob repo status clean on `main...origin/main`.
 
-- Deploy to Bob.
-- Confirm dashboard HTML includes `Legacy unassigned` and `Assignee`.
-- Confirm no queue mutation was performed.
+Outcome:
+
+- Bob-oppgaver now labels unassigned ready tasks as `Legacy unassigned`.
+- No queue mutation was performed.
