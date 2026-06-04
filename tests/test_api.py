@@ -108,6 +108,8 @@ def test_dashboard_includes_bob_result_actions_ui() -> None:
     assert response.status_code == 200
     body = response.text
     assert "copyTextToClipboard" in body
+    assert "taskResultValue" in body
+    assert "latest_summary" in body
     assert "Kopier resultat" in body
     assert "Kopier ID" in body
     assert "Kopier tittel" in body

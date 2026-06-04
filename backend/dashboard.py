@@ -891,8 +891,18 @@ DASHBOARD_HTML = """\
       );
     }
 
+    function taskResultValue(task) {
+      if (task == null) {
+        return null;
+      }
+      if (task.result !== null && task.result !== undefined) {
+        return task.result;
+      }
+      return task.latest_summary || null;
+    }
+
     function taskHasResult(task) {
-      const value = task == null ? null : task.result;
+      const value = taskResultValue(task);
       if (value === null || value === undefined) {
         return false;
       }
@@ -913,7 +923,7 @@ DASHBOARD_HTML = """\
     }
 
     function resultExcerpt(task) {
-      const formatted = formatResultValue(task.result);
+      const formatted = formatResultValue(taskResultValue(task));
       if (!formatted) {
         return "";
       }
@@ -925,7 +935,7 @@ DASHBOARD_HTML = """\
     }
 
     function getTaskResultText(task) {
-      return formatResultValue(task == null ? null : task.result) || "";
+      return formatResultValue(taskResultValue(task)) || "";
     }
 
     async function copyTextToClipboard(text) {
@@ -1303,7 +1313,13 @@ DASHBOARD_HTML = """\
 
     function renderBobTaskDetail(payload) {
       const panel = document.getElementById("bob-history-detail");
-      const task = payload.task || {};
+      const task = { ...(payload.task || {}) };
+      if (
+        (task.result === null || task.result === undefined || task.result === "") &&
+        payload.latest_summary
+      ) {
+        task.latest_summary = payload.latest_summary;
+      }
       panel.hidden = false;
       document.getElementById("bob-detail-title").textContent =
         task.title || payload.task_id || "Oppgavedetaljer";
@@ -1325,7 +1341,7 @@ DASHBOARD_HTML = """\
       const resultBlock = document.getElementById("bob-detail-result");
       const resultToolbar = document.getElementById("bob-detail-result-toolbar");
       const resultToggle = document.getElementById("bob-detail-result-toggle");
-      const formattedResult = formatResultValue(task.result);
+      const formattedResult = getTaskResultText(task);
       if (formattedResult) {
         resultWrap.hidden = false;
         resultBlock.textContent = formattedResult;
