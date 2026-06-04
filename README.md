@@ -15,7 +15,7 @@ Første versjon skal være read-only:
 - Status for Hermes gateway
 - Enkel systeminformasjon
 
-Start/stopp/restart av Hermes skal ikke implementeres før LaunchAgent og loggbaner er verifisert.
+Start/stopp av Hermes Gateway er fortsatt begrenset. **Restart** er implementert i Phase 5A, men krever `ALLOW_SERVICE_ACTIONS=true` på serveren.
 
 ## Bob LaunchAgent-drift
 
@@ -57,7 +57,7 @@ lsof -nP -iTCP:8787 -sTCP:LISTEN
 curl -s http://127.0.0.1:8787/api/status | python3 -m json.tool
 ```
 
-Forventet API-svar inkluderer `"status": "ok"`, `"read_only": true`, og `"allow_unsafe_commands": false`.
+Forventet API-svar inkluderer `"status": "ok"`, `"read_only": true`, `"allow_service_actions": false`, og `"allow_unsafe_commands": false`.
 
 ### Les Hermes UI-logger
 
@@ -104,6 +104,12 @@ GET /api/logs/sources
 GET /api/logs/{source_id}?lines=100
 ```
 
+Allowlistet write-endepunkt (Phase 5A — krever `ALLOW_SERVICE_ACTIONS=true`):
+
+```text
+POST /api/hermes/restart
+```
+
 Eksempler:
 
 ```text
@@ -111,7 +117,9 @@ GET /api/logs/gateway_stdout?lines=50
 GET /api/logs/gateway_stderr?lines=50
 ```
 
-Ingen start/stopp/restart-, terminal- eller shell-endepunkter finnes. Loggvisning bruker kun server-side allowlist.
+Ingen start/stop-, terminal- eller shell-endepunkter finnes. Restart bruker fast `launchctl kickstart` uten klient-input. Loggvisning bruker kun server-side allowlist.
+
+Se `docs/api/service-actions.md` for audit, cooldown og feilhåndtering.
 
 ## Konfigurasjon
 
@@ -123,6 +131,30 @@ Viktige defaults:
 HERMES_UI_HOST=127.0.0.1
 HERMES_UI_PORT=8787
 ALLOW_UNSAFE_COMMANDS=false
+ALLOW_SERVICE_ACTIONS=false
+```
+
+### Aktivere gateway restart på Bob
+
+Legg i lokal `.env` på Bob (ikke commit):
+
+```text
+ALLOW_SERVICE_ACTIONS=true
+```
+
+Restart Hermes UI LaunchAgent etter endring. Dashboard viser **Restart Gateway**-knapp med bekreftelsesmodal.
+
+Audit-logg:
+
+```text
+/Users/trulsdahl/.hermes-ui/logs/service-actions.log
+```
+
+Test lokalt:
+
+```bash
+curl -s -X POST http://127.0.0.1:8787/api/hermes/restart
+# Forvent 403 når ALLOW_SERVICE_ACTIONS=false
 ```
 
 ## Verifisering

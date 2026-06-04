@@ -103,7 +103,7 @@ Hermes UI and the Hermes gateway are separate LaunchAgents:
 | Hermes UI | `no.truls.hermes-ui` | `127.0.0.1:8787` dashboard/API |
 | Hermes gateway | `ai.hermes.gateway` | gateway process via `hermes_cli` |
 
-Hermes UI reads gateway status and verified gateway logs through allowlisted backend logic. It does not control the gateway in the current read-only phase.
+Hermes UI reads gateway status and verified gateway logs through allowlisted backend logic. Phase 5A adds restart-only control when `ALLOW_SERVICE_ACTIONS=true`.
 
 ### Hermes Gateway LaunchAgent (verified metadata)
 
@@ -116,12 +116,12 @@ Hermes UI reads gateway status and verified gateway logs through allowlisted bac
 | Stdout log | `/Users/trulsdahl/.hermes/logs/gateway.log` |
 | Stderr log | `/Users/trulsdahl/.hermes/logs/gateway.error.log` |
 
-### Planned service actions (Phase 5A — not yet in runtime)
+### Service actions (Phase 5A — restart implemented)
 
 When `ALLOW_SERVICE_ACTIONS=true` on Bob:
 
 ```bash
-# Restart (live verified 2026-06-04)
+# Restart (implemented in UI/API — live verified 2026-06-04)
 launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway
 
 # Start (verify in maintenance window before 5B)

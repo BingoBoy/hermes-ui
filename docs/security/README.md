@@ -67,13 +67,13 @@ Before adding start, stop, or restart:
 6. Gate with `ALLOW_SERVICE_ACTIONS=false` by default.
 7. Re-run security verification.
 
-**Phase 5 discuss status (2026-06-04):**
+**Phase 5A execute status (2026-06-04):**
 
-| Action | Command | Verified |
-|--------|---------|----------|
-| Restart | `launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway` | Yes — live on Bob |
-| Start | `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist` | Documented only |
-| Stop | `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist` | Documented only |
+| Action | Command | Implemented |
+|--------|---------|-------------|
+| Restart | `launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway` | Yes — POST `/api/hermes/restart` |
+| Start | `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist` | No — Phase 5B |
+| Stop | `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist` | No — Phase 5B |
 
 Implementation rules:
 

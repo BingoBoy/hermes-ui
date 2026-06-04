@@ -1,6 +1,9 @@
 # Service Actions API
 
-Planned write endpoints for Hermes Gateway control. **Not implemented until Phase 5A execute.**
+Allowlisted write endpoints for Hermes Gateway control. **Phase 5A implements restart only.**
+
+**Implemented:** `POST /api/hermes/restart`  
+**Planned:** start/stop in Phase 5B
 
 ## Principles
 
@@ -46,7 +49,7 @@ Implementation uses `subprocess.run` with a fixed argv list. No `shell=True`.
 
 ## Endpoints
 
-### POST /api/hermes/restart (5A)
+### POST /api/hermes/restart (5A — implemented)
 
 Restart the Hermes Gateway LaunchAgent.
 

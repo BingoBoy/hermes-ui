@@ -117,13 +117,13 @@
 
 **Requirements:** ACT-01, ACT-02, ACT-03, ACT-04 (Track A); Bob task entry (Track B)
 
-**Status:** Discuss complete on 2026-06-04 — 5A execute ready
+**Status:** 5A execute complete locally on 2026-06-04 — Bob deploy verification pending
 
 **Sub-phases:**
 
 | ID | Name | Goal | Status |
 |----|------|------|--------|
-| 5A | Restart-only action | POST restart with audit, confirmation, feature gate | Planned — next execute |
+| 5A | Restart-only action | POST restart with audit, confirmation, feature gate | Complete locally — Bob deploy pending |
 | 5B | Start/stop actions | bootstrap/bootout after live verification | Blocked |
 | 5C | Bob task entry | kanban create wrapper API | Blocked on 5A + kanban verify |
 | 5D | Response/history view | Read-only kanban list/show | Blocked on 5C |

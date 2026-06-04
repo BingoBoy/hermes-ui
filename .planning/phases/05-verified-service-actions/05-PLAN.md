@@ -1,7 +1,7 @@
 # Phase 5: Verified Service Actions — Plan
 
 **Created:** 2026-06-04
-**Status:** Ready for execute (5A only)
+**Status:** Complete (5A execute)
 **Scope:** First safe write slice — Hermes Gateway restart with audit and confirmation
 
 ## Goal
@@ -84,12 +84,13 @@ launchctl print gui/$(id -u)/ai.hermes.gateway
 
 ## Verification Checklist
 
-- [ ] `git status` — no accidental `.env` or secrets
-- [ ] `.venv/bin/python -m pytest` — all tests pass
-- [ ] Secret scan — no tokens committed
+- [x] `git status` — no accidental `.env` or secrets
+- [x] `.venv/bin/python -m pytest` — 25 tests pass locally
+- [x] Secret scan — no tokens committed
+- [x] No `shell=True` in service action code
+- [x] `ALLOW_SERVICE_ACTIONS=false` → POST returns 403
+- [ ] Audit log entry on Bob after live restart test
 - [ ] Unauthenticated external curl still returns HTTP 302 (Cloudflare Access)
-- [ ] `ALLOW_SERVICE_ACTIONS=false` → POST returns 403
-- [ ] Audit log entry created on successful restart
 
 ## Out of Scope for 5A Execute
 

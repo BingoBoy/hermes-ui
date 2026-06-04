@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 5 - Verified Service Actions and Bob Interaction Planning
+**Current focus:** Phase 5A complete — restart-only service action; Phase 5B next
 
 ## Workflow
 
@@ -20,12 +20,12 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 5 |
-| Name | Verified Service Actions and Bob Interaction Planning |
-| Status | Discuss complete — ready for 5A plan/execute |
-| Requirements | ACT-01, ACT-02, ACT-03, ACT-04 (Track A); Bob entry (Track B, 5C–5D) |
-| Current command | `/gsd-discuss-phase 5` completed — planning docs written |
-| Next command | `/gsd-plan-phase 5A` or `/gsd-execute-phase 5A` using `05-PLAN.md` |
+| Phase | 5A |
+| Name | Restart-only Verified Service Action |
+| Status | Execute complete — pending Bob deploy verification |
+| Requirements | ACT-03 (restart), ACT-04 (audit + confirmation) |
+| Current command | `/gsd-execute-phase 5A` completed |
+| Next command | Deploy to Bob, set `ALLOW_SERVICE_ACTIONS=true`, verify restart; then 5B |
 
 ## Session Plan
 
@@ -134,6 +134,19 @@ Decision: use direct fixed `launchctl` argv (no `hermes gateway` CLI, no shell).
 
 Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/service-actions.md`, `docs/api/bob-interaction.md`.
 
+## Phase 5A Execute (2026-06-04)
+
+**Implemented:**
+
+- `backend/service_actions.py` — allowlisted restart, audit JSONL, 30s cooldown
+- `POST /api/hermes/restart` — gated by `ALLOW_SERVICE_ACTIONS`
+- Dashboard restart button + confirmation modal
+- 25 pytest tests passing locally
+
+**Not implemented:** start, stop, Bob task entry, chat, terminal
+
+**Bob deploy gate:** set `ALLOW_SERVICE_ACTIONS=true` in local `.env`, restart Hermes UI LaunchAgent, test restart via dashboard.
+
 ## Open Gates
 
 - Live-verify bootstrap/bootout before implementing start/stop (5B).
@@ -155,7 +168,7 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - Phase 3 documented verified Hermes UI LaunchAgent deployment on Bob.
 - Phase 4 deployed and documented Cloudflare Tunnel and Access exposure.
 - Phase 4.5 improved read-only dashboard UX for daily operations.
-- Phase 5 discuss mapped service actions and Bob entry; restart kickstart live-verified; 5A plan ready.
+- Phase 5 discuss mapped service actions and Bob entry; restart kickstart live-verified; 5A execute implemented locally.
 
 ## Phase 4.5 Verification
 
@@ -176,4 +189,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after Phase 5 discuss — verified service actions and Bob interaction planning*
+*Last updated: 2026-06-04 after Phase 5A restart-only execute*
