@@ -112,6 +112,8 @@ Implementation rules:
 
 **Template inputs (6D):** Optional dashboard fields only alter the composed task `body` string client-side before the same `POST /api/bob/tasks`. Inputs cannot set CLI flags, shell commands, routes, or server actions — plain text merged into kanban task description only.
 
+**Result actions (6E):** Bob Inbox and task detail copy/expand controls are browser-only (Clipboard API + DOM). They do not call the backend, Hermes CLI, or mutate kanban state. No delete/archive/mark-read write routes.
+
 Before adding logs:
 
 1. Verify actual log paths.

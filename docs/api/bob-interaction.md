@@ -230,11 +230,22 @@ Sections on the dashboard (when `ALLOW_BOB_TASKS=true`):
 - Optional auto-refresh every 12 seconds (toggle)
 - Detail panel with result text/JSON and technical JSON in `<details>`
 
-### Bob Inbox (6B)
+### Bob Inbox (6B + 6E)
 
 - Read-only inbox of up to 8 newest completed/failed/result tasks
-- Result excerpt and **Vis detaljer** per card
+- Result excerpt with **Vis mer** / **Vis mindre** for long text (6E)
+- **Kopier resultat**, **Kopier ID**, **Kopier tittel** — browser clipboard only (6E)
+- Task meta line (ID + timestamps) on each card (6E)
+- **Vis detaljer** opens the task detail panel below Bob-oppgaver
 - Empty state: «Ingen ferdige Bob-resultater ennå.»
+
+### Bob result actions (6E)
+
+- Frontend-only — no new API routes or Bob/Hermes state changes
+- Copy uses `navigator.clipboard.writeText` with a safe `execCommand` fallback
+- Same actions on the **Oppgavedetaljer** result panel when a result exists
+- Feedback: «Kopiert» / «Kunne ikke kopiere»
+- No delete, archive, or mark-read in this phase
 
 ## Bob Verification Checklist (before execute)
 
@@ -260,6 +271,7 @@ Confirm JSON shape matches this document and dispatcher processes `ready` tasks.
 | 6A–6B | Dashboard follow-up + Bob Inbox | **Implemented** (UI only) |
 | 6C | Bob task-maler (templates) | **Implemented** (UI only) |
 | 6D | Template inputs (optional fields → task text) | **Implemented** (UI only) |
+| 6E | Bob result actions (copy + expand) | **Implemented** (UI only) |
 
 ## Related Documents
 

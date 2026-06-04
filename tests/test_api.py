@@ -85,6 +85,22 @@ def test_dashboard_includes_bob_inbox_ui() -> None:
     assert "renderBobInbox" in body
 
 
+def test_dashboard_includes_bob_result_actions_ui() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "copyTextToClipboard" in body
+    assert "Kopier resultat" in body
+    assert "Kopier ID" in body
+    assert "Kopier tittel" in body
+    assert "Kunne ikke kopiere" in body
+    assert "Vis mer" in body
+    assert "Vis mindre" in body
+    assert "bob-detail-result-toolbar" in body
+    assert "bindResultExpandToggle" in body
+
+
 def test_dashboard_includes_bob_task_submission_ui() -> None:
     response = client.get("/")
 
