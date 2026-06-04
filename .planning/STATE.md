@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 6 **shipped** (2026-06-04). Next: `/gsd-progress` — roadmap/status review before planning a new phase.
+**Current focus:** Phases **5–6 + v2.1-bob-ux** reflect Bob production reality in planning docs. **No new phase selected.** Next: audit or choose from ROADMAP backlog.
 
-**Last activity:** 2026-06-04 — Phase 6 Operations Enrichment shipped to `main` + Bob (`8632f49`).
+**Last activity:** 2026-06-04 — Planning sync after Phase 6 (Phase 5 Bob production, gates, backlog).
 
 ## Workflow
 
@@ -26,7 +26,7 @@ discuss -> plan -> execute -> verify
 | Name | Phase 6 shipped — Operations Enrichment |
 | Status | Shipped 2026-06-04 — production-verified on Bob |
 | Requirements | OPS-02, OPS-03 delivered |
-| Next command | `/gsd-progress` for roadmap / next phase planning |
+| Next command | `/gsd-audit-uat` or `/gsd-discuss-phase` for backlog item (5B, OPS-01, …) |
 
 ## Session Plan
 
@@ -197,10 +197,21 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 
 ## Open Gates
 
-- Live-verify bootstrap/bootout before implementing start/stop (5B).
-- Live-verify `hermes kanban create` JSON contract **on Bob** before enabling `ALLOW_BOB_TASKS` (5C execute).
-- Set `ALLOW_SERVICE_ACTIONS=true` on Bob only when ready to test 5A execute.
-- Log display remains server-side allowlisted only.
+**Resolved on Bob (2026-06-04):**
+
+- ~~Live-verify kanban create before `ALLOW_BOB_TASKS`~~ — Bob tasks live
+- ~~Set `ALLOW_SERVICE_ACTIONS=true` for restart testing~~ — restart live on Bob
+
+**Still open:**
+
+- **5B:** Live-verify `launchctl bootstrap`/`bootout` for gateway start/stop in a maintenance window before any UI implementation.
+- **Bob ops (external):** `hermes-assignee` missing in kanban-worker environment — blocks full worker completion, not Hermes UI API.
+- **Planning:** v1 `REQUIREMENTS.md` traceability deferred to project audit (see `PROJECT.md` Validated for shipped work).
+- **Product:** No next official roadmap phase chosen yet.
+
+**Standing security gates (unchanged):**
+
+- Log display remains server-side allowlisted only (gateway logs today; Hermes UI logs not in allowlist).
 - Keep real `.env` out of git.
 - Keep `ALLOW_UNSAFE_COMMANDS=false`.
 - Do not add any API route that accepts a file path or shell command from client input.
@@ -216,8 +227,7 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - Phase 3 documented verified Hermes UI LaunchAgent deployment on Bob.
 - Phase 4 deployed and documented Cloudflare Tunnel and Access exposure.
 - Phase 4.5 improved read-only dashboard UX for daily operations.
-- Phase 5 discuss mapped service actions and Bob entry; restart kickstart live-verified; 5A execute implemented locally.
-- Phase 5C discuss locked kanban create API/UI/security; local CLI JSON verified; Bob verify pending before execute.
+- Phase 5 complete on Bob: restart (`ALLOW_SERVICE_ACTIONS`), Bob tasks (`ALLOW_BOB_TASKS`, assignee `default`), list/show APIs; 5B start/stop still blocked.
 - Phase 6M shipped read-only Bob-oppgaver assignee labels (`Legacy unassigned` for ready tasks without assignee); no queue mutation.
 - Delmilestone **2.1-bob-ux** archived 2026-06-04 — see `.planning/MILESTONES.md` and `.planning/milestones/v2.1-bob-ux-*`.
 - Phase **6 Operations Enrichment** shipped 2026-06-04 — `GET /api/operations`, dashboard drift section.
@@ -269,4 +279,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after Phase 6 ship*
+*Last updated: 2026-06-04 after planning sync (Phase 5–6 Bob production)*

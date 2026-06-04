@@ -1,6 +1,20 @@
 # Project Milestones: Hermes UI for Bob
 
-## v2.1-bob-ux Bob Dashboard / Kanban UX (Shipped: 2026-06-04)
+## ROADMAP Phase 6: Operations Enrichment (Shipped: 2026-06-04)
+
+**Delivered:** Read-only operational views — `GET /api/operations`, dashboard «Drift og tjenester», LaunchAgent metadata for Hermes UI and gateway.
+
+**Requirements:** OPS-02, OPS-03
+
+**Production:** Bob `@8632f49` (feat); `/api/operations` verified; Docker off on Bob.
+
+**Git range:** `01d04f8` → `8632f49`
+
+---
+
+## v2.1-bob-ux: Bob Dashboard / Kanban UX (Shipped: 2026-06-04)
+
+**Status:** Completed and archived.
 
 **Delivered:** Safe Bob task communication in the Hermes UI dashboard — inbox, templates, results, assignee, artifacts, and queue labels on top of Phase 5C/5D APIs.
 
@@ -17,19 +31,21 @@
 - Read-only safe worker artifacts in task detail
 - Assignee column with `Legacy unassigned` for old ready tasks
 
-**Stats:**
-
-- Git range: `9fff380` → `bbfdce7`
-- ~7 code files touched in milestone range (`dashboard.py`, `bob_tasks.py`, tests)
-- Audit verdict: `tech_debt` (worker `hermes-assignee` external; no UI blockers)
-- Known deferred at close: see `.planning/milestones/v2.1-bob-ux-MILESTONE-AUDIT.md`
-
 **Archives:**
 
 - Roadmap: `.planning/milestones/v2.1-bob-ux-ROADMAP.md`
 - Requirements: `.planning/milestones/v2.1-bob-ux-REQUIREMENTS.md`
 - Audit: `.planning/milestones/v2.1-bob-ux-MILESTONE-AUDIT.md`
 
-**What's next:** ROADMAP **Phase 6: Operations Enrichment** (`/gsd-plan-phase 6`) — distinct from this decimal track.
-
 ---
+
+## What's next
+
+Phases **v2.1-bob-ux** and **ROADMAP Phase 6** are shipped. No active roadmap phase selected.
+
+**Recommended:**
+
+1. `/gsd-audit-uat` or `/gsd-audit-milestone` — reconcile planning vs production
+2. Choose next work from `.planning/ROADMAP.md` **Backlog** (e.g. 5B, OPS-01, UI logs) via `/gsd-discuss-phase` or `/gsd-add-phase`
+
+**Not automatic:** `/gsd-complete-milestone` for whole project until audit clarifies scope.

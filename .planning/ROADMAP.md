@@ -6,9 +6,10 @@
 
 ## Milestones
 
-- **v2.1-bob-ux** — Bob Dashboard / Kanban UX (Phases 6A–6N) — shipped 2026-06-04 → [archive](milestones/v2.1-bob-ux-ROADMAP.md)
+- **v2.1-bob-ux** — Bob Dashboard / Kanban UX (6A–6N) — shipped 2026-06-04 → [archive](milestones/v2.1-bob-ux-ROADMAP.md)
 - **Phase 6** — Operations Enrichment — shipped 2026-06-04
-- **Next:** `/gsd-progress` — assess roadmap and backlog before new phase
+- **Phase 5** — Service actions + Bob tasks — complete on Bob (5B deferred)
+- **Next:** Audit or choose from [Backlog](#backlog--not-yet-planned) — no active phase
 
 ## Overview
 
@@ -123,16 +124,22 @@
 
 **Requirements:** ACT-01, ACT-02, ACT-03, ACT-04 (Track A); Bob task entry (Track B)
 
-**Status:** 5A execute complete locally on 2026-06-04 — Bob deploy verification pending
+**Status:** **Complete on Bob** (2026-06-04) — restart, Bob tasks, and list/show live in production; 5B deferred
+
+**Bob production (resolved — formerly «deploy pending»):**
+
+- `ALLOW_SERVICE_ACTIONS=true` — restart gateway via dashboard/API live
+- `ALLOW_BOB_TASKS=true`, `HERMES_BOB_TASK_ASSIGNEE=default` — create/list/show live
+- Verified on Bob loopback and via `https://hermes-ui.strategistudio.no` (Cloudflare Access)
 
 **Sub-phases:**
 
 | ID | Name | Goal | Status |
 |----|------|------|--------|
-| 5A | Restart-only action | POST restart with audit, confirmation, feature gate | Complete locally — Bob deploy pending |
-| 5B | Start/stop actions | bootstrap/bootout after live verification | Blocked |
-| 5C | Bob task entry | kanban create wrapper API | **Complete locally** — Bob deploy + ALLOW_BOB_TASKS verify pending |
-| 5D | Response/history view | Read-only kanban list/show | **Complete locally** — Bob deploy pending |
+| 5A | Restart-only action | POST restart with audit, confirmation, feature gate | **Complete** — live on Bob |
+| 5B | Start/stop actions | bootstrap/bootout after live verification | **Blocked** — not live-verified; maintenance window required |
+| 5C | Bob task entry | kanban create wrapper API | **Complete** — live on Bob |
+| 5D | Response/history view | Read-only kanban list/show | **Complete** — live on Bob |
 
 **Success criteria:**
 1. Exact launchctl restart command verified on Bob (`kickstart -k`).
@@ -210,14 +217,24 @@ Production-verified on Bob. Audit: [milestones/v2.1-bob-ux-MILESTONE-AUDIT.md](m
 - Add read-only operational status cards.
 - Re-run security boundary checks.
 
-## Deferred Phases
+## Backlog / not yet planned
 
-These are intentionally outside the first read-only MVP:
+Items **not** in the shipped roadmap phases 1–6. Do not duplicate work already delivered:
 
-- Verified logs viewer after log paths and redaction rules are confirmed.
-- Start/stop/restart controls after launchctl commands are verified.
-- Audit logging for write actions.
-- Rich operational views for Cloudflare Tunnel, launchctl, Docker, and LM Studio.
+| Item | Notes |
+|------|--------|
+| **5B** Gateway start/stop | `bootstrap`/`bootout` documented; **blocked** until live verify in maintenance window |
+| **OPS-01** Cloudflare tunnel status in UI | Tunnel/Access documented (Phase 4); no live tunnel status card yet |
+| **Hermes UI LaunchAgent logs in dashboard** | Paths at `~/.hermes-ui/logs/`; not in bounded logs allowlist (gateway logs only today) |
+| **LM Studio / n8n** adjacent services | Mentioned in Notion only; no plan |
+| **Project requirements traceability** | `REQUIREMENTS.md` v1 checkboxes not fully synced — defer to `/gsd-audit-milestone` or project audit |
+
+**Already delivered (remove from «future» thinking):**
+
+- Bounded gateway logs viewer — Phase 2
+- Gateway restart + audit — Phase 5A on Bob
+- Bob kanban create/list/show — Phase 5C/5D on Bob (+ v2.1-bob-ux dashboard)
+- LaunchAgent operational cards — Phase 6 (`GET /api/operations`)
 
 ## Coverage Validation
 
@@ -229,7 +246,7 @@ These are intentionally outside the first read-only MVP:
 | Dashboard | 4 | 4 |
 | Security | 4 | 4 |
 
-All 19 v1 requirements are mapped to Phase 1 for the first safe read-only MVP.
+All 19 v1 requirements are mapped to Phase 1 for the first safe read-only MVP. Full checkbox migration to `PROJECT.md` Validated is **deferred** to a future project audit (not updated in this sync).
 
 ---
-*Roadmap created: 2026-06-03 · v2.1-bob-ux archived: 2026-06-04*
+*Roadmap created: 2026-06-03 · v2.1-bob-ux archived: 2026-06-04 · Phase 5–6 Bob production sync: 2026-06-04*
