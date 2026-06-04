@@ -62,6 +62,8 @@ Bob binary path: `/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes`
 
 **Gjenstår før 5C execute på Bob:** kanban create/list/show med Bob-binær (se `05C-PLAN.md` Preconditions).
 
-## Next Step
+## Execute (2026-06-04)
 
-Execute `05C-PLAN.md` (3 atomic tasks) etter Bob kanban-verify.
+- Backend, API, dashboard, and docs implemented
+- 46 pytest passed locally
+- Bob deploy: enable `ALLOW_BOB_TASKS=true` after on-host kanban verify

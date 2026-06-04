@@ -142,9 +142,9 @@ Rules:
 
 See `docs/api/service-actions.md` for API and audit contract.
 
-### Bob task entry (Phase 5C — planned)
+### Bob task entry (Phase 5C)
 
-Hermes UI will submit async tasks via the Hermes CLI kanban board (not gateway HTTP, not chat):
+Hermes UI submits async tasks via the Hermes CLI kanban board (not gateway HTTP, not chat):
 
 | Item | Value |
 |------|-------|
@@ -154,17 +154,18 @@ Hermes UI will submit async tasks via the Hermes CLI kanban board (not gateway H
 | Audit log | `/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log` |
 | API | `POST /api/bob/tasks` |
 
-Planned LaunchAgent env (execute phase — do not set on Bob until verified):
+LaunchAgent env (enable only after Bob kanban verify):
 
 ```text
 ALLOW_BOB_TASKS=false
 HERMES_CLI_BIN=/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes
+HERMES_UI_BOB_AUDIT_LOG=/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log
 ```
 
 Rules:
 
 - Same subprocess discipline as service actions: fixed argv, no shell, no client flags.
-- Do not enable `ALLOW_BOB_TASKS` until Bob kanban JSON contract is live-verified.
+- Enable `ALLOW_BOB_TASKS=true` only after Bob kanban JSON contract is live-verified.
 - Kanban dispatcher runs in the gateway process — gateway must stay running.
 
 See `docs/api/bob-interaction.md` and `.planning/phases/05C-bob-task-entry/05C-PLAN.md`.

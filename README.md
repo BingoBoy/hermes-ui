@@ -104,10 +104,11 @@ GET /api/logs/sources
 GET /api/logs/{source_id}?lines=100
 ```
 
-Allowlistet write-endepunkt (Phase 5A — krever `ALLOW_SERVICE_ACTIONS=true`):
+Allowlistede write-endepunkter:
 
 ```text
-POST /api/hermes/restart
+POST /api/hermes/restart   # Phase 5A — krever ALLOW_SERVICE_ACTIONS=true
+POST /api/bob/tasks        # Phase 5C — krever ALLOW_BOB_TASKS=true
 ```
 
 Eksempler:
@@ -132,6 +133,7 @@ HERMES_UI_HOST=127.0.0.1
 HERMES_UI_PORT=8787
 ALLOW_UNSAFE_COMMANDS=false
 ALLOW_SERVICE_ACTIONS=false
+ALLOW_BOB_TASKS=false
 ```
 
 ### Aktivere gateway restart på Bob
@@ -155,6 +157,28 @@ Test lokalt:
 ```bash
 curl -s -X POST http://127.0.0.1:8787/api/hermes/restart
 # Forvent 403 når ALLOW_SERVICE_ACTIONS=false
+
+curl -s -X POST http://127.0.0.1:8787/api/bob/tasks \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Test","body":"Safe test"}'
+# Forvent 403 når ALLOW_BOB_TASKS=false
+```
+
+### Aktivere Bob-oppgaver på Bob
+
+Legg i lokal `.env` på Bob (ikke commit):
+
+```text
+ALLOW_BOB_TASKS=true
+HERMES_CLI_BIN=/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes
+```
+
+Restart Hermes UI LaunchAgent. Dashboard viser **Send oppgave til Bob** når gaten er på.
+
+Audit-logg:
+
+```text
+/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log
 ```
 
 ## Tester

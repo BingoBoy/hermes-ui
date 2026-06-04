@@ -162,13 +162,20 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 
 **Next:** Truls runs Bob kanban verify commands → execute `05C-PLAN.md` (3 tasks)
 
+## Phase 5C Execute (2026-06-04)
+
+**Implemented:**
+
+- `backend/bob_tasks.py` — kanban create, validation, 60s cooldown, audit JSONL
+- `POST /api/bob/tasks` — gated by `ALLOW_BOB_TASKS`
+- Dashboard «Send oppgave til Bob»
+- 46 pytest tests passing locally
+
+**Bob deploy gate:** set `ALLOW_BOB_TASKS=true` in plist/env after kanban verify on Bob; restart `no.truls.hermes-ui`.
+
 ## Phase 5C Preflight (2026-06-04)
 
-**Testmiljø:** OK — `pytest.ini` med `pythonpath = .`; kjør `.venv/bin/python -m pytest` eller `.venv/bin/pytest` fra repo-roten (25 passed).
-
-**Runtime:** Ingen `backend/bob_tasks.py`; ingen `POST /api/bob/tasks` — klar for implementering etter Bob kanban CLI-verify.
-
-**Commit:** `chore: stabilize test preflight for Bob task entry`
+**Testmiljø:** OK — `pytest.ini` med `pythonpath = .`
 
 ## Open Gates
 

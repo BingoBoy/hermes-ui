@@ -2,7 +2,7 @@
 
 How Hermes UI submits a bounded asynchronous task to Bob via Hermes kanban — no browser terminal, chat, or arbitrary CLI.
 
-**Status:** Phase 5C planned — `POST /api/bob/tasks` not implemented until execute.
+**Status:** Phase 5C implemented — `POST /api/bob/tasks` when `ALLOW_BOB_TASKS=true`.
 
 ## Goal
 
@@ -111,7 +111,7 @@ Browser (Cloudflare Access)
 
 Read-only status (5D): `GET /api/bob/tasks`, `GET /api/bob/tasks/{id}` → `kanban list/show --json`.
 
-## API: POST /api/bob/tasks (planned)
+## API: POST /api/bob/tasks
 
 **Request:**
 

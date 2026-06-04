@@ -125,7 +125,7 @@
 |----|------|------|--------|
 | 5A | Restart-only action | POST restart with audit, confirmation, feature gate | Complete locally — Bob deploy pending |
 | 5B | Start/stop actions | bootstrap/bootout after live verification | Blocked |
-| 5C | Bob task entry | kanban create wrapper API | **Discuss complete** — execute blocked on Bob kanban verify |
+| 5C | Bob task entry | kanban create wrapper API | **Complete locally** — Bob deploy + ALLOW_BOB_TASKS verify pending |
 | 5D | Response/history view | Read-only kanban list/show | Blocked on 5C |
 
 **Success criteria:**

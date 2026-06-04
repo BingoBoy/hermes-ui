@@ -4,7 +4,7 @@
 
 **Depends on:** 5A security patterns (audit, gates, subprocess); Bob live kanban verify (gate below)
 
-**Status:** Planned — not executed
+**Status:** Executed locally 2026-06-04 — Bob deploy verification pending
 
 ## Preconditions (Truls on Bob before Task 1 merge)
 

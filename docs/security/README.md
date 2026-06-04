@@ -83,9 +83,9 @@ Implementation rules:
 - Audit log: `/Users/trulsdahl/.hermes-ui/logs/service-actions.log` (JSONL).
 - See `docs/api/service-actions.md` for API contract.
 
-## Bob Task Entry (Phase 5C — planned)
+## Bob Task Entry (Phase 5C)
 
-**Status:** Discuss/plan complete 2026-06-04 — execute pending.
+**Status:** Implemented 2026-06-04 — disabled by default (`ALLOW_BOB_TASKS=false`).
 
 | Control | Rule |
 |---------|------|
