@@ -8,7 +8,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-04)
 
 **Current focus:** Milestone **v1.1 Operational Visibility** — requirements + roadmap defined. **Phase 7** next (read-only Cloudflare tunnel status). No code started.
 
-**Last activity:** 2026-06-04 — `/gsd-new-milestone` v1.1.
+**Last activity:** 2026-06-04 — `/gsd-discuss-phase 7` (CONTEXT locked).
 
 ## Workflow
 
@@ -22,11 +22,11 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 7 (not started) |
-| Name | v1.1 — Cloudflare Tunnel Status |
-| Status | Planning — discuss → plan → execute |
-| Requirements | `.planning/REQUIREMENTS.md` (OPS-01–03, LOG-UI-01–03) |
-| Next command | `/gsd-discuss-phase 7` |
+| Phase | 7 |
+| Name | Cloudflare Tunnel Status |
+| Status | Discuss complete — ready for plan |
+| Requirements | OPS-01–03 (Phase 7) |
+| Next command | `/gsd-plan-phase 7` |
 
 ## Session Plan
 
