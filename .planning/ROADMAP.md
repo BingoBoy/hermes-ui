@@ -153,6 +153,17 @@
 - `docs/api/service-actions.md`
 - `docs/api/bob-interaction.md`
 
+## Phase 6A–6B: Task Follow-up and Bob Inbox
+
+**Goal:** Improve dashboard UX for Bob task follow-up and a read-only Bob Inbox.
+
+**Status:** Complete — dashboard-only, no new API routes
+
+**Delivered:**
+
+- Bob-oppgaver: status badges, timestamps, auto-refresh, result panel
+- Bob Inbox: curated completed/failed/result tasks (client-side)
+
 ## Phase 6: Operations Enrichment
 
 **Goal:** Add richer operational views for launchctl, Docker, and adjacent services where relevant.

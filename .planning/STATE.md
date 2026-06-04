@@ -173,6 +173,14 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 
 **Bob deploy gate:** set `ALLOW_BOB_TASKS=true` in plist/env after kanban verify on Bob; restart `no.truls.hermes-ui`.
 
+## Phase 6A–6B Execute (2026-06-04)
+
+**Implemented (dashboard only):**
+
+- Bob-oppgaver follow-up: badges, auto-refresh 12s, result view, highlight new task
+- Bob Inbox: up to 8 curated items from existing GET list API
+- 62 pytest tests passing; no new write routes
+
 ## Phase 5D Execute (2026-06-04)
 
 **Implemented:**

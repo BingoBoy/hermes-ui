@@ -106,6 +106,8 @@ Implementation rules:
 
 **Read-only (5D):** `GET /api/bob/tasks`, `GET /api/bob/tasks/{task_id}` — same `ALLOW_BOB_TASKS` gate; fixed `kanban list/show --json` argv; strict `task_id` validation; no audit by default.
 
+**Dashboard (6A–6B):** Bob Inbox and auto-refresh are client-side only — no new backend routes or CLI argv.
+
 Before adding logs:
 
 1. Verify actual log paths.

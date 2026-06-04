@@ -194,15 +194,28 @@ Independent of `ALLOW_SERVICE_ACTIONS` (gateway restart).
 }
 ```
 
-## UI (planned)
+## UI
 
-Section **«Send oppgave til Bob»** on the dashboard:
+Sections on the dashboard (when `ALLOW_BOB_TASKS=true`):
+
+### Send oppgave til Bob (5C)
 
 - Title field, body textarea
 - Copy: creates an **async kanban task**, not live chat
 - On success: show `task_id` and `audit_id`
-- On error: show safe API `detail`
-- Form hidden or disabled when `ALLOW_BOB_TASKS=false`
+
+### Bob-oppgaver (5D + 6A)
+
+- Task table with status badges (ready, running, completed, failed, unknown)
+- Timestamps: created, started, completed
+- Optional auto-refresh every 12 seconds (toggle)
+- Detail panel with result text/JSON and technical JSON in `<details>`
+
+### Bob Inbox (6B)
+
+- Read-only inbox of up to 8 newest completed/failed/result tasks
+- Result excerpt and **Vis detaljer** per card
+- Empty state: «Ingen ferdige Bob-resultater ennå.»
 
 ## Bob Verification Checklist (before execute)
 
@@ -225,6 +238,7 @@ Confirm JSON shape matches this document and dispatcher processes `ready` tasks.
 |-------|-------------|
 | 5C | POST `/api/bob/tasks` via kanban create |
 | 5D | GET task list/detail via kanban list/show | **Implemented** |
+| 6A–6B | Dashboard follow-up + Bob Inbox | **Implemented** (UI only) |
 
 ## Related Documents
 
