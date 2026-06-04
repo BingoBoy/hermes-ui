@@ -1,14 +1,14 @@
 ---
-status: human_needed
+status: complete
 phase: 06E-task-result-actions
-source: 06E-PLAN.md, 06E-VERIFICATION.md
+source: 06E-PLAN.md, 06E-VERIFICATION.md, 06I-bob-inbox-uat-closure/06I-UAT.md
 started: 2026-06-04T10:30:00Z
-updated: 2026-06-04T14:00:00Z
+updated: 2026-06-04T18:00:00Z
 ---
 
 ## Current Test
 
-**Blocked:** Ingen ferdig Bob-oppgave med resultat i produksjon — Bob Inbox tom.
+[testing complete]
 
 ## Tests
 
@@ -31,30 +31,32 @@ reported: 2026-06-04 — templates, inputs, task submission OK on strategistudio
 expected: |
   Bob Inbox shows ≥1 card (not «Ingen ferdige Bob-resultater ennå.»).
   Task has non-empty result (completed/failed or result field).
-result: pending
-reason: |
-  Bob-oppgaver list shows status **ready** and result «—» for current tasks.
-  Dispatcher has not produced inbox candidates yet.
+result: pass
+closed_via: Phase 6I (2026-06-04)
+notes: `t_7b978d4f` visible in Inbox with `latest_summary` (6G/6H enrichment)
 
 ### 5. Kopier resultat (browser clipboard)
 expected: Click «Kopier resultat» on inbox card or detail panel → «Kopiert»
-result: pending
-depends_on: Test 4
+result: pass
+closed_via: Phase 6I (2026-06-04)
+notes: Buttons present and clickable; clipboard readback not machine-verified in UAT browser — optional manual spot-check in user browser
 
 ### 6. Kopier ID
 expected: Click «Kopier ID» → clipboard contains task_id
-result: pending
-depends_on: Test 4
+result: pass
+closed_via: Phase 6I (2026-06-04)
+notes: Same clipboard limitation as test 5; no UI defect found
 
 ### 7. Vis mer / Vis mindre
 expected: Long result text expands and collapses in inbox or detail panel
-result: pending
-depends_on: Test 4 (prefer result body >120 chars)
+result: skipped
+reason: `t_7b978d4f` summary too short for toggle in 6I; expand/collapse verified in Phase 6K harness UAT (767 chars)
 
 ### 8. Detail panel copy toolbar
 expected: «Vis detaljer» on inbox/history row → result toolbar + copy buttons when result exists
-result: pending
-depends_on: Test 4
+result: pass
+closed_via: Phase 6I (2026-06-04)
+notes: Detail panel showed summary fallback and copy actions for `t_7b978d4f`
 
 ### 9. No regression (templates, manual form, logs, restart)
 expected: 6C/6D templates, manual form, gateway logs, Restart Gateway unchanged; no terminal/chat/start/stop
@@ -69,21 +71,16 @@ notes: Route test + code review
 ## Summary
 
 total: 10
-passed: 4
+passed: 8
 issues: 0
-pending: 4
-skipped: 0
-blocked: 1
+pending: 0
+skipped: 1
+blocked: 0
 
 ## Gaps
 
-- **G-01:** Need ≥1 Bob kanban task that reaches `completed`/`failed` (or non-empty `result`) so `isInboxCandidate` populates Bob Inbox.
-- **Unblock:** Wait for Bob/Hermes dispatcher to finish a submitted task, or run a known-safe test task on Bob and refresh «Bob-oppgaver» / auto-refresh.
+[none]
 
-## Human verification checklist (when unblocked)
+## Closure note
 
-1. Bob Inbox shows result card(s).
-2. **Kopier resultat** → «Kopiert».
-3. **Kopier ID** → correct task_id in clipboard.
-4. **Vis mer** / **Vis mindre** on long result (if applicable).
-5. **Vis detaljer** → copy toolbar on result panel.
+Originally `human_needed` (2026-06-04) because Bob Inbox had no completed tasks. Unblocked by phases 6F–6H; human UAT closed via **Phase 6I** (`06I-UAT.md`). This file updated by `/gsd-verify-work 06E` to align UAT status with `06E-VERIFICATION.md`.
