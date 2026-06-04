@@ -136,6 +136,7 @@ HERMES_UI_PORT=8787
 ALLOW_UNSAFE_COMMANDS=false
 ALLOW_SERVICE_ACTIONS=false
 ALLOW_BOB_TASKS=false
+HERMES_BOB_TASK_ASSIGNEE=
 ```
 
 ### Aktivere gateway restart på Bob
@@ -177,9 +178,12 @@ Legg i lokal `.env` på Bob (ikke commit):
 ```text
 ALLOW_BOB_TASKS=true
 HERMES_CLI_BIN=/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes
+HERMES_BOB_TASK_ASSIGNEE=default
 ```
 
-Restart Hermes UI LaunchAgent. Dashboard viser **Bob task-maler** (valgfrie felt per mal + «Send mal til Bob»), **Send oppgave til Bob**, **Bob-oppgaver** (med valgfri auto-oppdatering), **Bob Inbox** (kopier resultat/ID, vis mer) og trygge resultathandlinger i oppgavedetaljer når gaten er på.
+`HERMES_BOB_TASK_ASSIGNEE` er serverstyrt og valideres som en enkel profilstreng (`A-Z`, `a-z`, `0-9`, `_`, `-`, `.`). Klienten kan ikke sende eller overstyre assignee. Hvis variabelen står tom, opprettes oppgaven uten `--assignee`.
+
+Restart Hermes UI LaunchAgent. Dashboard viser **Bob task-maler** (valgfrie felt per mal + «Send mal til Bob»), **Send oppgave til Bob**, **Bob-oppgaver** (med valgfri auto-oppdatering), **Bob Inbox** (kopier resultat/ID, vis mer) og trygge resultathandlinger i oppgavedetaljer når gaten er på. `/api/status` viser konfigurert Bob task assignee når verdien er gyldig.
 
 Audit-logg:
 

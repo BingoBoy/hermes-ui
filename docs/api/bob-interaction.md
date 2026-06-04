@@ -2,7 +2,7 @@
 
 How Hermes UI submits a bounded asynchronous task to Bob via Hermes kanban — no browser terminal, chat, or arbitrary CLI.
 
-**Status:** Phase 5C/5D implemented — create and read-only list/show when `ALLOW_BOB_TASKS=true`.
+**Status:** Phase 5C/5D implemented; Phase 6F adds optional server-controlled assignee — create and read-only list/show when `ALLOW_BOB_TASKS=true`.
 
 ## Goal
 
@@ -25,16 +25,16 @@ Verified locally on 2026-06-04. **Re-verify on Bob** before deploy (see Precondi
 **Syntax:**
 
 ```bash
-hermes kanban create <title> [--body BODY] [--idempotency-key KEY] [--json]
+hermes kanban create <title> [--body BODY] [--assignee PROFILE] [--idempotency-key KEY] [--json]
 ```
 
 **Hermes UI fixed argv (allowlisted action `create_kanban_task`):**
 
 ```text
-hermes kanban create <title> --body <body> --idempotency-key <server-uuid> --json
+hermes kanban create <title> --body <body> [--assignee <server-profile>] --idempotency-key <server-uuid> --json
 ```
 
-When body is empty after trim, omit `--body` and its value.
+When body is empty after trim, omit `--body` and its value. When `HERMES_BOB_TASK_ASSIGNEE` is unset, omit `--assignee` and its value. The client never supplies assignee.
 
 | Aspect | Value |
 |--------|--------|
@@ -51,7 +51,7 @@ When body is empty after trim, omit `--body` and its value.
   "id": "t_06aa482f",
   "title": "Hermes UI planning test",
   "body": "Planning verification only",
-  "assignee": null,
+  "assignee": "default",
   "status": "ready",
   "priority": 0,
   "created_at": 1780560167,
@@ -107,7 +107,7 @@ hermes kanban show <task_id> --json
 Browser (Cloudflare Access)
   → POST /api/bob/tasks  { title, body }
   → Hermes UI backend (127.0.0.1:8787)
-  → subprocess: fixed hermes kanban create argv
+  → subprocess: fixed hermes kanban create argv + optional server assignee
   → ~/.hermes kanban.db + gateway dispatcher
 ```
 
@@ -149,6 +149,7 @@ Read-only status (5D): `GET /api/bob/tasks`, `GET /api/bob/tasks/{task_id}` → 
   "task_id": "t_06aa482f",
   "status": "ready",
   "title": "Summarize inbox triage rules",
+  "assignee": "default",
   "submitted_at": "2026-06-04T12:00:00+00:00",
   "audit_id": "2026-06-04T12:00:00Z-create_kanban_task-a1b2c3d4"
 }
@@ -165,6 +166,8 @@ Read-only status (5D): `GET /api/bob/tasks`, `GET /api/bob/tasks/{task_id}` → 
 
 Idempotency key is **server-generated** (UUID per submit). Not accepted from the client in v1.
 
+Assignee is **server-controlled** via `HERMES_BOB_TASK_ASSIGNEE`. The value is optional, strictly validated as a simple profile string (`A-Z`, `a-z`, `0-9`, `_`, `-`, `.`), and never accepted from the request body.
+
 ## Security Model
 
 | Control | Value |
@@ -172,6 +175,7 @@ Idempotency key is **server-generated** (UUID per submit). Not accepted from the
 | Feature gate | `ALLOW_BOB_TASKS=false` (default) |
 | Allowlisted action | `create_kanban_task` only |
 | Subprocess | `shell=False`, fixed argv |
+| Assignee | Optional server env `HERMES_BOB_TASK_ASSIGNEE`; recommended Bob production value: `default` |
 | Cooldown | 60s between successful creates |
 | Audit log | `/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log` (JSONL) |
 | Audit content | `title_hash`, `body_length` — not full body |
@@ -254,13 +258,13 @@ HERMES=/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes
 KEY="hermes-ui-bob-verify-$(date +%s)"
 
 $HERMES kanban create "Hermes UI Bob verify" --body "Safe test" \
-  --idempotency-key "$KEY" --json
+  --assignee default --idempotency-key "$KEY" --json
 
 $HERMES kanban list --json | head
 $HERMES kanban show <id> --json
 ```
 
-Confirm JSON shape matches this document and dispatcher processes `ready` tasks.
+Confirm JSON shape matches this document and dispatcher does not report `skipped_unassigned` for the new task. If the task spawns but later ends `blocked/protocol_violation`, treat that as a separate Hermes Agent / `kanban-worker` protocol issue.
 
 ## Sub-Phases
 

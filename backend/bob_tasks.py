@@ -28,6 +28,7 @@ DEFAULT_LIST_LIMIT = 20
 MAX_LIST_LIMIT = 50
 MAX_TASK_ID_LENGTH = 80
 _TASK_ID_PATTERN = re.compile(r"^t_[a-zA-Z0-9_-]+$")
+_ASSIGNEE_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 DEFAULT_HERMES_CLI_BIN = "/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes"
 DEFAULT_AUDIT_LOG = "/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log"
@@ -53,6 +54,10 @@ class ActionNotAllowed(Exception):
 
 class InvalidTaskInput(Exception):
     """Raised when title/body fail validation."""
+
+
+class InvalidTaskAssigneeConfig(Exception):
+    """Raised when server-side Bob task assignee config is invalid."""
 
 
 class InvalidTaskId(Exception):
@@ -151,6 +156,23 @@ def normalize_task_input(title: str, body: str | None) -> tuple[str, str | None]
     return normalized_title, normalized_body
 
 
+def validate_task_assignee(assignee: str | None) -> str | None:
+    """Validate optional server-controlled kanban assignee profile."""
+    if assignee is None:
+        return None
+
+    normalized = assignee.strip()
+    if not normalized:
+        return None
+    if len(normalized) > 80:
+        raise InvalidTaskAssigneeConfig("HERMES_BOB_TASK_ASSIGNEE is too long")
+    if not _ASSIGNEE_PATTERN.match(normalized):
+        raise InvalidTaskAssigneeConfig(
+            "HERMES_BOB_TASK_ASSIGNEE contains invalid characters"
+        )
+    return normalized
+
+
 def create_kanban_argv(
     settings: Settings,
     *,
@@ -167,6 +189,9 @@ def create_kanban_argv(
     ]
     if body:
         argv.extend(["--body", body])
+    assignee = validate_task_assignee(settings.bob_task_assignee)
+    if assignee:
+        argv.extend(["--assignee", assignee])
     argv.extend(["--idempotency-key", idempotency_key, "--json"])
     return argv
 
@@ -357,6 +382,7 @@ def build_task_create_response(
 
     title_digest = _title_hash(normalized_title)
     body_len = len(normalized_body) if normalized_body else 0
+    assignee = validate_task_assignee(settings.bob_task_assignee)
 
     try:
         result = run_create_kanban_task(
@@ -407,6 +433,7 @@ def build_task_create_response(
         "task_id": result.task_id,
         "status": result.status,
         "title": normalized_title,
+        "assignee": assignee,
         "audit_id": audit_id,
         "submitted_at": submitted_at,
     }

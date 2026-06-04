@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from backend.bob_tasks import (
     BobTasksDisabled,
     CooldownActive as BobCooldownActive,
+    InvalidTaskAssigneeConfig,
     InvalidTaskId,
     InvalidTaskInput,
     TaskNotFound,
@@ -142,6 +143,15 @@ def api_bob_create_task(request: BobTaskRequest):
                 "retry_after": exc.retry_after,
             },
         ) from None
+    except InvalidTaskAssigneeConfig as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": "invalid_bob_task_assignee_config",
+                "detail": str(exc),
+            },
+        ) from None
 
     if not payload["success"]:
         return JSONResponse(status_code=502, content=payload)
@@ -229,4 +239,3 @@ def api_logs_source(
             },
         )
     return payload
-

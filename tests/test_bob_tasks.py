@@ -13,6 +13,7 @@ from backend.bob_tasks import (
     CREATE_KANBAN_TASK_ACTION,
     BobTasksDisabled,
     CooldownActive,
+    InvalidTaskAssigneeConfig,
     InvalidTaskId,
     InvalidTaskInput,
     TaskNotFound,
@@ -28,6 +29,7 @@ from backend.bob_tasks import (
     run_list_kanban_tasks,
     run_show_kanban_task,
     show_kanban_argv,
+    validate_task_assignee,
     validate_task_id,
     write_audit_entry,
 )
@@ -91,6 +93,29 @@ def test_create_argv_includes_body_when_present() -> None:
     )
 
     assert argv[4:6] == ["--body", "Body text"]
+
+
+def test_create_argv_includes_server_controlled_assignee() -> None:
+    settings = Settings(allow_bob_tasks=True, bob_task_assignee="default")
+    argv = create_kanban_argv(
+        settings,
+        title="T",
+        body=None,
+        idempotency_key="key-1",
+    )
+
+    assert "--assignee" in argv
+    assert argv[argv.index("--assignee") + 1] == "default"
+    assert argv[-3:] == ["--idempotency-key", "key-1", "--json"]
+
+
+def test_validate_task_assignee_rejects_unsafe_config() -> None:
+    assert validate_task_assignee("") is None
+    assert validate_task_assignee("default.worker-1") == "default.worker-1"
+    with pytest.raises(InvalidTaskAssigneeConfig):
+        validate_task_assignee("default;rm")
+    with pytest.raises(InvalidTaskAssigneeConfig):
+        validate_task_assignee("default worker")
 
 
 def test_run_create_requires_feature_gate() -> None:
@@ -276,6 +301,56 @@ def test_api_bob_tasks_returns_202_when_enabled(
     assert payload["task_id"] == "t_ui_test"
     assert payload["status"] == "ready"
     assert "audit_id" in payload
+
+
+def test_api_bob_tasks_uses_server_assignee_and_ignores_client_assignee(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "true")
+    monkeypatch.setenv("HERMES_BOB_TASK_ASSIGNEE", "default")
+    monkeypatch.setenv("HERMES_UI_BOB_AUDIT_LOG", str(tmp_path / "bob.log"))
+    captured: dict[str, list[str]] = {}
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        captured["args"] = args
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=_success_stdout("t_ui_assignee", "ready"),
+            stderr="",
+        )
+
+    monkeypatch.setattr("backend.bob_tasks._default_runner", fake_runner)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/bob/tasks",
+        json={"title": "UI test", "body": "From pytest", "assignee": "bob"},
+    )
+
+    assert response.status_code == 202
+    payload = response.json()
+    assert payload["assignee"] == "default"
+    assert captured["args"].count("--assignee") == 1
+    assert captured["args"][captured["args"].index("--assignee") + 1] == "default"
+    assert "bob" not in captured["args"]
+
+
+def test_api_bob_tasks_rejects_invalid_server_assignee(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "true")
+    monkeypatch.setenv("HERMES_BOB_TASK_ASSIGNEE", "bad value")
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/bob/tasks",
+        json={"title": "UI test", "body": "From pytest"},
+    )
+
+    assert response.status_code == 500
+    assert response.json()["detail"]["error"] == "invalid_bob_task_assignee_config"
 
 
 def test_api_bob_tasks_returns_400_for_invalid_title(

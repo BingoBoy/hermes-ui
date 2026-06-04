@@ -149,7 +149,7 @@ Hermes UI submits async tasks via the Hermes CLI kanban board (not gateway HTTP,
 | Item | Value |
 |------|-------|
 | Hermes CLI on Bob | `/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes` |
-| Create command | `hermes kanban create <title> --body <body> --idempotency-key <uuid> --json` |
+| Create command | `hermes kanban create <title> --body <body> --assignee <server-profile> --idempotency-key <uuid> --json` when `HERMES_BOB_TASK_ASSIGNEE` is set |
 | Feature gate | `ALLOW_BOB_TASKS=false` (default) |
 | Audit log | `/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log` |
 | API | `POST /api/bob/tasks` |
@@ -160,11 +160,14 @@ LaunchAgent env (enable only after Bob kanban verify):
 ALLOW_BOB_TASKS=false
 HERMES_CLI_BIN=/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes
 HERMES_UI_BOB_AUDIT_LOG=/Users/trulsdahl/.hermes-ui/logs/bob-interactions.log
+HERMES_BOB_TASK_ASSIGNEE=default
 ```
 
 Rules:
 
 - Same subprocess discipline as service actions: fixed argv, no shell, no client flags.
+- Bob task assignee is server-controlled. Do not accept assignee from the browser payload.
+- `HERMES_BOB_TASK_ASSIGNEE` must be a simple Hermes profile string (`A-Z`, `a-z`, `0-9`, `_`, `-`, `.`). Bob production should use `default` while that is the only spawnable profile.
 - Enable `ALLOW_BOB_TASKS=true` only after Bob kanban JSON contract is live-verified.
 - Kanban dispatcher runs in the gateway process — gateway must stay running.
 

@@ -91,9 +91,10 @@ Implementation rules:
 |---------|------|
 | Feature gate | `ALLOW_BOB_TASKS=false` by default (independent of `ALLOW_SERVICE_ACTIONS`) |
 | Allowlisted action | `create_kanban_task` only |
-| CLI entry | Fixed argv: `hermes kanban create <title> [--body <body>] --idempotency-key <server-uuid> --json` |
+| CLI entry | Fixed argv: `hermes kanban create <title> [--body <body>] [--assignee <server-profile>] --idempotency-key <server-uuid> --json` |
 | Subprocess | `subprocess.run(..., shell=False)` — never `shell=True` |
-| Client input | `title` + `body` only — no CLI flags, paths, or shell commands |
+| Client input | `title` + `body` only — no assignee, CLI flags, paths, or shell commands |
+| Assignee | Optional server env `HERMES_BOB_TASK_ASSIGNEE`; simple profile string only |
 | Input limits | Title max 200 chars, no newlines; body max 4000 chars |
 | Idempotency | Server-generated UUID per submit — not from client |
 | Cooldown | 60s between successful creates |
@@ -220,4 +221,3 @@ curl -sS -D - -o /dev/null https://hermes-ui.strategistudio.no/api/status
 Expected: redirect to Cloudflare Access, not direct Hermes UI JSON.
 
 See `docs/architecture/cloudflare.md` for deployment details.
-

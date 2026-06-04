@@ -19,10 +19,27 @@ def test_api_status_returns_read_only_service_status() -> None:
     assert payload["allow_unsafe_commands"] is False
     assert payload["allow_service_actions"] is False
     assert payload["allow_bob_tasks"] is False
+    assert payload["bob_task_assignee"] is None
+    assert payload["bob_task_assignee_configured"] is False
+    assert payload["bob_task_assignee_valid"] is True
     assert payload["capabilities"]["restart_hermes_gateway"] is False
     assert payload["capabilities"]["create_bob_task"] is False
     assert payload["capabilities"]["list_bob_tasks"] is False
     assert payload["capabilities"]["show_bob_task"] is False
+
+
+def test_api_status_reports_server_controlled_bob_task_assignee(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("HERMES_BOB_TASK_ASSIGNEE", "default")
+
+    response = client.get("/api/status")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["bob_task_assignee"] == "default"
+    assert payload["bob_task_assignee_configured"] is True
+    assert payload["bob_task_assignee_valid"] is True
 
 
 def test_api_system_returns_safe_system_payload() -> None:
@@ -178,4 +195,3 @@ def test_only_allowlisted_write_route_exists() -> None:
         ("/api/bob/tasks", {"POST"}),
         ("/api/hermes/restart", {"POST"}),
     ]
-

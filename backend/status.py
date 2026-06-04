@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import platform
+import re
 import shutil
 import socket
 import subprocess
@@ -12,6 +13,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from backend.config import Settings
+
+_ASSIGNEE_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 
 @dataclass(frozen=True)
@@ -195,6 +198,12 @@ def get_hermes_status(settings: Settings) -> dict[str, Any]:
 
 def get_service_status(settings: Settings) -> dict[str, Any]:
     """Return read-only Hermes UI service status."""
+    bob_task_assignee = settings.bob_task_assignee.strip()
+    bob_task_assignee_valid = (
+        not bob_task_assignee
+        or len(bob_task_assignee) <= 80
+        and bool(_ASSIGNEE_PATTERN.match(bob_task_assignee))
+    )
     return {
         "status": "ok",
         "service": settings.service_name,
@@ -208,6 +217,11 @@ def get_service_status(settings: Settings) -> dict[str, Any]:
         "allow_unsafe_commands": settings.allow_unsafe_commands,
         "allow_service_actions": settings.allow_service_actions,
         "allow_bob_tasks": settings.allow_bob_tasks,
+        "bob_task_assignee": (
+            bob_task_assignee if bob_task_assignee and bob_task_assignee_valid else None
+        ),
+        "bob_task_assignee_configured": bool(bob_task_assignee),
+        "bob_task_assignee_valid": bob_task_assignee_valid,
         "capabilities": {
             "restart_hermes_gateway": settings.allow_service_actions,
             "create_bob_task": settings.allow_bob_tasks,
@@ -222,4 +236,3 @@ def as_jsonable(payload: Any) -> Any:
     if hasattr(payload, "__dataclass_fields__"):
         return asdict(payload)
     return payload
-

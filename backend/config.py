@@ -28,6 +28,7 @@ class Settings:
     allow_bob_tasks: bool = False
     hermes_cli_bin: str = "/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes"
     bob_task_timeout_seconds: float = 30.0
+    bob_task_assignee: str = ""
 
 
 def get_settings() -> Settings:
@@ -46,5 +47,5 @@ def get_settings() -> Settings:
         bob_task_timeout_seconds=float(
             os.getenv("BOB_TASK_TIMEOUT_SECONDS", "30").strip() or "30"
         ),
+        bob_task_assignee=os.getenv("HERMES_BOB_TASK_ASSIGNEE", "").strip(),
     )
-
