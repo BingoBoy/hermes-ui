@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 6E Task Result Actions — **implemented & deployed**; external UAT **`human_needed`** until Bob Inbox has ≥1 result. Next: wait for/completed Bob task → finish 6E UAT.
+**Current focus:** Phase 6M Bob Task Queue Hygiene — **shipped to `main`** (commits `1cd4e06`, `16d1da6`); deployed and verified on Bob. Next: `/gsd-progress` for next phase.
 
-**Last activity:** 2026-06-04 — 6E partial UAT on strategistudio.no (templates/send OK; inbox empty, tasks `ready`).
+**Last activity:** 2026-06-04 — Phase 6M shipped direct to `main` (no PR; code-only assignee labels in dashboard).
 
 ## Workflow
 
@@ -219,6 +219,18 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - Phase 4.5 improved read-only dashboard UX for daily operations.
 - Phase 5 discuss mapped service actions and Bob entry; restart kickstart live-verified; 5A execute implemented locally.
 - Phase 5C discuss locked kanban create API/UI/security; local CLI JSON verified; Bob verify pending before execute.
+- Phase 6M shipped read-only Bob-oppgaver assignee labels (`Legacy unassigned` for ready tasks without assignee); no queue mutation.
+
+## Phase 6M Ship (2026-06-04)
+
+**Shipped:** direct to `main` (no feature-branch PR).
+
+**Commits:**
+
+- `1cd4e06` — feat(6M): label bob task assignees (`backend/dashboard.py`, `tests/test_api.py`)
+- `16d1da6` — docs(6M): record bob queue hygiene verification
+
+**Verification:** `.planning/phases/06M-bob-task-queue-hygiene/06M-VERIFICATION.md` — all PASS; Bob at `1cd4e06`.
 
 ## Phase 4.5 Verification
 
@@ -239,4 +251,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after Phase 6D ship (PR #1)*
+*Last updated: 2026-06-04 after Phase 6M ship (direct to main)*
