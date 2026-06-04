@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+from pydantic import BaseModel, Field
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 
+from backend.bob_tasks import (
+    BobTasksDisabled,
+    CooldownActive as BobCooldownActive,
+    InvalidTaskInput,
+    build_task_create_response,
+)
 from backend.config import get_settings
 from backend.dashboard import render_dashboard
 from backend.log_sources import DEFAULT_LOG_LINES, MAX_LOG_LINES
@@ -16,6 +24,11 @@ from backend.service_actions import (
     build_restart_response,
 )
 from backend.status import get_hermes_status, get_service_status, get_system_status
+
+
+class BobTaskRequest(BaseModel):
+    title: str = Field(..., min_length=1)
+    body: str = ""
 
 app = FastAPI(
     title="Hermes UI for Bob",
@@ -84,6 +97,51 @@ def api_hermes_restart():
     if not payload["success"]:
         return JSONResponse(status_code=502, content=payload)
     return payload
+
+
+@app.post("/api/bob/tasks", status_code=202)
+def api_bob_create_task(request: BobTaskRequest):
+    settings = get_settings()
+    try:
+        payload = build_task_create_response(
+            settings,
+            title=request.title,
+            body=request.body or None,
+        )
+    except BobTasksDisabled:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "bob_tasks_disabled",
+                "detail": "Bob task entry is disabled on this server",
+            },
+        ) from None
+    except InvalidTaskInput as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "success": False,
+                "error": "invalid_input",
+                "detail": str(exc),
+            },
+        ) from None
+    except BobCooldownActive as exc:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "success": False,
+                "error": "cooldown_active",
+                "detail": (
+                    f"Task was submitted recently; try again in {exc.retry_after} seconds"
+                ),
+                "retry_after": exc.retry_after,
+            },
+        ) from None
+
+    if not payload["success"]:
+        return JSONResponse(status_code=502, content=payload)
+    return JSONResponse(status_code=202, content=payload)
 
 
 @app.get("/api/logs/sources")

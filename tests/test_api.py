@@ -18,7 +18,9 @@ def test_api_status_returns_read_only_service_status() -> None:
     assert payload["read_only"] is True
     assert payload["allow_unsafe_commands"] is False
     assert payload["allow_service_actions"] is False
+    assert payload["allow_bob_tasks"] is False
     assert payload["capabilities"]["restart_hermes_gateway"] is False
+    assert payload["capabilities"]["create_bob_task"] is False
 
 
 def test_api_system_returns_safe_system_payload() -> None:
@@ -93,5 +95,8 @@ def test_only_allowlisted_write_route_exists() -> None:
         assert path_lower not in forbidden_paths
         assert not any(term in path_lower for term in forbidden_substrings)
 
-    assert write_routes == [("/api/hermes/restart", {"POST"})]
+    assert sorted(write_routes) == [
+        ("/api/bob/tasks", {"POST"}),
+        ("/api/hermes/restart", {"POST"}),
+    ]
 

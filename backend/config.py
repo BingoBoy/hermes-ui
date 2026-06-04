@@ -25,6 +25,9 @@ class Settings:
     hermes_launchd_label: str = "ai.hermes.gateway"
     allow_unsafe_commands: bool = False
     allow_service_actions: bool = False
+    allow_bob_tasks: bool = False
+    hermes_cli_bin: str = "/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes"
+    bob_task_timeout_seconds: float = 30.0
 
 
 def get_settings() -> Settings:
@@ -37,5 +40,11 @@ def get_settings() -> Settings:
         hermes_launchd_label=os.getenv("HERMES_LAUNCHD_LABEL", "ai.hermes.gateway"),
         allow_unsafe_commands=_env_bool("ALLOW_UNSAFE_COMMANDS", False),
         allow_service_actions=_env_bool("ALLOW_SERVICE_ACTIONS", False),
+        allow_bob_tasks=_env_bool("ALLOW_BOB_TASKS", False),
+        hermes_cli_bin=os.getenv("HERMES_CLI_BIN", Settings.hermes_cli_bin).strip()
+        or Settings.hermes_cli_bin,
+        bob_task_timeout_seconds=float(
+            os.getenv("BOB_TASK_TIMEOUT_SECONDS", "30").strip() or "30"
+        ),
     )
 
