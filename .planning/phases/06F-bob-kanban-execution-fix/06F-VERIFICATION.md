@@ -22,10 +22,19 @@ Expected:
 
 ## Bob checks
 
-Pending until deploy:
+Deployed on Bob on 2026-06-04:
 
-- Bob LaunchAgent/env has `HERMES_BOB_TASK_ASSIGNEE=default`.
-- `/api/status` reports `bob_task_assignee=default` and `bob_task_assignee_valid=true`.
-- A new task created through existing `POST /api/bob/tasks` has `assignee=default`.
-- Dispatcher no longer reports `skipped_unassigned` for the new task.
-- If task spawns but ends `blocked/protocol_violation`, keep 6E UAT blocked on Hermes Agent / `kanban-worker` protocol behavior, not Hermes UI task creation.
+- PASS — Bob pulled `main` to commit `317f6ff`.
+- PASS — Bob LaunchAgent plist now has `HERMES_BOB_TASK_ASSIGNEE=default`.
+- NOTE — `launchctl kickstart -k gui/$(id -u)/no.truls.hermes-ui` did not reload the updated EnvironmentVariables. A `bootout` + `bootstrap` was required.
+- PASS — `/api/status` reports `bob_task_assignee=default`, `bob_task_assignee_configured=true`, and `bob_task_assignee_valid=true`.
+- PASS — Existing `POST /api/bob/tasks` created `t_be47ac55` with `assignee=default`.
+- PASS — `hermes kanban dispatch --json` spawned `t_be47ac55` with `assignee=default`; it was not in `skipped_unassigned`.
+
+Worker result:
+
+- BLOCKED — `t_be47ac55` later ended `blocked`.
+- Reason: `Missing command: hermes-assignee not found in the environment.`
+- Task log: `/Users/trulsdahl/.hermes/kanban/logs/t_be47ac55.log`.
+- Log evidence: worker ran `hermes-assignee verify`, exit `127`; `which hermes-assignee`, exit `1`; then called `kanban_block`.
+- This is a separate Hermes Agent / `kanban-worker` environment issue. Hermes UI task creation is no longer blocked by unassigned tasks, but 6E UAT still cannot resume to completed-result validation until the worker environment has the expected `hermes-assignee` command or the worker task prompt/skill behavior is corrected.
