@@ -17,9 +17,13 @@ grep -R "@app.route\\|@.*route" backend/ || true
 
 ## Bob checks
 
-Pending:
+- PASS — deployed commit `98bad83` to Bob with fast-forward pull.
+- PASS — restarted Hermes UI LaunchAgent with `launchctl kickstart -k gui/$(id -u)/no.truls.hermes-ui`.
+- PASS — `/api/status`: `ok`, `allow_bob_tasks=True`, `bob_task_assignee=default`, `bob_task_assignee_valid=True`.
+- PASS — `/api/bob/tasks?limit=50` now includes `latest_summary="Morgenbrief for Truls er opprettet."` for `t_7b978d4f`.
+- PASS — Bob repo status clean on `main...origin/main`.
 
-- Deploy to Bob.
-- Confirm `/api/bob/tasks?limit=50` now includes `latest_summary` for `t_7b978d4f`.
-- Confirm Bob dashboard still serves 6G fallback code.
-- Confirm no new routes/write actions.
+Outcome:
+
+- Bob Inbox can now receive summary text directly from the existing list API for completed tasks whose kanban `result` is null.
+- 6E copy/expand UAT can proceed from the Inbox card as well as the task detail panel.
