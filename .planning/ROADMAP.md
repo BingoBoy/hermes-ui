@@ -168,7 +168,7 @@
 
 **Goal:** One-click predefined Bob task templates via existing `POST /api/bob/tasks`.
 
-**Status:** Complete locally 2026-06-04 — deploy to Bob pending
+**Status:** Complete — verified 2026-06-04 (automated + user UAT on strategistudio.no)
 
 **Scope:**
 

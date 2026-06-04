@@ -18,4 +18,8 @@
 
 ## Deploy
 
-Pending: `git push origin main`, Bob pull + kickstart LaunchAgent
+Done: `c16f5a4` on origin/main, Bob pull + kickstart 2026-06-04.
+
+## UAT
+
+User verified https://hermes-ui.strategistudio.no — all checkpoints pass (2026-06-04).

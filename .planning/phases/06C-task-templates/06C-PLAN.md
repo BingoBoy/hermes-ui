@@ -4,7 +4,7 @@
 
 **Depends on:** 5C (task create), 5D (list/detail), 6A–6B (post-create UX)
 
-**Status:** Executed locally 2026-06-04 — Bob deploy pending
+**Status:** Complete — verified 2026-06-04 (UAT 7/7 pass, 1 skipped)
 
 **Context:** `.planning/phases/06C-task-templates/06C-CONTEXT.md`
 
