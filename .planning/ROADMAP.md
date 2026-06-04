@@ -7,7 +7,8 @@
 ## Milestones
 
 - **v2.1-bob-ux** — Bob Dashboard / Kanban UX (Phases 6A–6N) — shipped 2026-06-04 → [archive](milestones/v2.1-bob-ux-ROADMAP.md)
-- **Next (roadmap):** Phase 6 Operations Enrichment — not started
+- **Phase 6** — Operations Enrichment — shipped 2026-06-04
+- **Next:** `/gsd-progress` — assess roadmap and backlog before new phase
 
 ## Overview
 
@@ -177,17 +178,27 @@ Production-verified on Bob. Audit: [milestones/v2.1-bob-ux-MILESTONE-AUDIT.md](m
 
 **Goal:** Add richer operational views for launchctl, Docker, and adjacent services where relevant.
 
-**Status:** Planned — 2026-06-04 (`06-PLAN.md`, `06-RESEARCH.md`)
+**Status:** **Shipped** 2026-06-04 — verified (pytest 77, Bob `/api/operations`, UAT passed)
 
 **Requirements:** OPS-02, OPS-03
 
 **Note:** Distinct from decimal phases 6A–6M (Bob Dashboard / Kanban UX), which are complete.
+
+**Delivered:**
+
+- `GET /api/operations` — read-only LaunchAgent metadata (Hermes UI + gateway)
+- Dashboard **«Drift og tjenester»** after Bob blocks
+- Docker off by default (`HERMES_OPS_INCLUDE_DOCKER=false` on Bob)
 
 **Planning artifacts:**
 
 - `.planning/phases/06-operations-enrichment/06-CONTEXT.md`
 - `.planning/phases/06-operations-enrichment/06-RESEARCH.md`
 - `.planning/phases/06-operations-enrichment/06-PLAN.md`
+- `.planning/phases/06-operations-enrichment/06-VERIFICATION.md`
+- `.planning/phases/06-operations-enrichment/06-UAT.md`
+
+**Git range:** `01d04f8` (plan) → `8632f49` (feat) → `47d8276` (verify docs)
 
 **Success criteria:**
 1. LaunchAgent detail display uses verified label/plist values.

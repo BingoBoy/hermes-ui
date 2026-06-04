@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** **Phase 6 Operations Enrichment** — complete and production-verified on Bob (`8632f49`).
+**Current focus:** Phase 6 **shipped** (2026-06-04). Next: `/gsd-progress` — roadmap/status review before planning a new phase.
 
-**Last activity:** 2026-06-04 — Phase 6 deployed; `/api/operations` OK on Bob.
+**Last activity:** 2026-06-04 — Phase 6 Operations Enrichment shipped to `main` + Bob (`8632f49`).
 
 ## Workflow
 
@@ -22,11 +22,11 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 6 |
-| Name | Operations Enrichment |
-| Status | Execute complete locally — Bob deploy pending push |
-| Requirements | OPS-02, OPS-03 |
-| Next command | Push + Bob pull; `/gsd-verify-work` or ship |
+| Phase | — (between phases) |
+| Name | Phase 6 shipped — Operations Enrichment |
+| Status | Shipped 2026-06-04 — production-verified on Bob |
+| Requirements | OPS-02, OPS-03 delivered |
+| Next command | `/gsd-progress` for roadmap / next phase planning |
 
 ## Session Plan
 
@@ -220,6 +220,15 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - Phase 5C discuss locked kanban create API/UI/security; local CLI JSON verified; Bob verify pending before execute.
 - Phase 6M shipped read-only Bob-oppgaver assignee labels (`Legacy unassigned` for ready tasks without assignee); no queue mutation.
 - Delmilestone **2.1-bob-ux** archived 2026-06-04 — see `.planning/MILESTONES.md` and `.planning/milestones/v2.1-bob-ux-*`.
+- Phase **6 Operations Enrichment** shipped 2026-06-04 — `GET /api/operations`, dashboard drift section.
+
+## Phase 6 Ship (2026-06-04)
+
+**Shipped:** direct to `main` (no feature-branch PR).
+
+**Commits:** `8632f49` feat(6), `47d8276` docs(6) verify.
+
+**Production:** Bob `/api/operations` read_only; both LaunchAgents running; docker disabled_by_config.
 - Bob UX informal requirements archived; main `REQUIREMENTS.md` v1 traceability unchanged.
 
 ## Deferred Items (acknowledged at v2.1-bob-ux close)
@@ -260,4 +269,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after v2.1-bob-ux milestone complete*
+*Last updated: 2026-06-04 after Phase 6 ship*

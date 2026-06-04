@@ -18,7 +18,9 @@ Truls can safely see whether Bob and Hermes are healthy without exposing shell a
 
 **Bob UX:** Inbox, templates, task history, copy/expand results, server assignee `default`, safe artifacts, assignee queue labels.
 
-**Next product phase:** ROADMAP Phase 6 Operations Enrichment (launchctl/Docker read-only) — `/gsd-plan-phase 6`.
+**Shipped phase:** ROADMAP Phase 6 Operations Enrichment (2026-06-04) — `GET /api/operations`, dashboard «Drift og tjenester».
+
+**Next:** `/gsd-progress` — roadmap review before new phase (5B start/stop, OPS-01 tunnel UI, or backlog).
 
 ## Requirements
 
@@ -32,6 +34,8 @@ Truls can safely see whether Bob and Hermes are healthy without exposing shell a
 - ✓ Server-side assignee for kanban create — v2.1-bob-ux (6F)
 - ✓ Summary fallback and inbox enrichment — v2.1-bob-ux (6G–6H)
 - ✓ Bob-first layout, artifacts, queue labels — v2.1-bob-ux (6J–6M)
+- ✓ LaunchAgent operational details (read-only) — Phase 6 (OPS-02)
+- ✓ Docker assessed, disabled when not on Bob — Phase 6 (OPS-03)
 
 **v1 project requirements:** Still tracked in `.planning/REQUIREMENTS.md` traceability (phases 1–2 marked Complete there; full PROJECT validation deferred to a future project milestone).
 

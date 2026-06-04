@@ -28,3 +28,8 @@ grep -R "hermes -z" backend/ || true
 - PASS — Assignee/status unchanged: `/api/status` ok, `bob_task_assignee=default`.
 
 Outcome: Phase 6 Operations Enrichment production-verified on Bob loopback.
+
+## UAT (2026-06-04)
+
+- PASS — `/gsd-verify-work 6`: automated + Bob loopback checks; see `06-UAT.md`.
+- Status: **passed** — recommend ship.
