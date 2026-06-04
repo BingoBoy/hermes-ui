@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** **Phase 6 Operations Enrichment** — implemented locally; Bob deploy after push to `origin/main`.
+**Current focus:** **Phase 6 Operations Enrichment** — complete and production-verified on Bob (`8632f49`).
 
-**Last activity:** 2026-06-04 — Phase 6 execute: `/api/operations` + dashboard «Drift og tjenester».
+**Last activity:** 2026-06-04 — Phase 6 deployed; `/api/operations` OK on Bob.
 
 ## Workflow
 

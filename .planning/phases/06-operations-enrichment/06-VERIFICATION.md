@@ -23,4 +23,8 @@ grep -R "hermes -z" backend/ || true
 
 ## Bob deploy (6.6)
 
-Pending after push: fast-forward pull, `launchctl kickstart -k` for `no.truls.hermes-ui`, curl `/api/operations`.
+- PASS — Bob pulled `8632f49`, restarted `no.truls.hermes-ui`.
+- PASS — `/api/operations`: `read_only=true`, agents `no.truls.hermes-ui` + `ai.hermes.gateway`, `docker.included=false`.
+- PASS — Assignee/status unchanged: `/api/status` ok, `bob_task_assignee=default`.
+
+Outcome: Phase 6 Operations Enrichment production-verified on Bob loopback.
