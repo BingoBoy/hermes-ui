@@ -243,6 +243,38 @@ DASHBOARD_HTML = """\
       margin: 0 0 14px;
       line-height: 1.5;
     }
+    .bob-task-templates {
+      margin-bottom: 18px;
+      max-width: 640px;
+    }
+    .bob-task-templates h3 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+    .bob-template-intro {
+      margin-bottom: 10px;
+    }
+    .bob-template-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .bob-template-btn {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font: inherit;
+      background: var(--card);
+      cursor: pointer;
+    }
+    .bob-template-btn:hover:not(:disabled) {
+      border-color: #94a3b8;
+      background: #f8fafc;
+    }
+    .bob-template-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
     .bob-form {
       display: grid;
       gap: 12px;
@@ -482,6 +514,19 @@ DASHBOARD_HTML = """\
       <div class="bob-disabled" id="bob-task-disabled" hidden>
         Bob-oppgaver er deaktivert på denne serveren (<code>ALLOW_BOB_TASKS=false</code>).
       </div>
+      <div id="bob-task-templates" class="bob-task-templates" hidden>
+        <h3>Bob task-maler</h3>
+        <p class="bob-intro bob-template-intro">
+          Send vanlige oppgaver til Bob med ett klikk — samme asynkrone kanban-flyt som skjemaet under.
+        </p>
+        <div id="bob-template-buttons" class="bob-template-grid">
+          <button type="button" class="bob-template-btn" data-template-id="morgenbrief">Morgenbrief</button>
+          <button type="button" class="bob-template-btn" data-template-id="ukesrapport">Ukesrapport</button>
+          <button type="button" class="bob-template-btn" data-template-id="konkurrentanalyse">Konkurrentanalyse</button>
+          <button type="button" class="bob-template-btn" data-template-id="nettsideanalyse">Nettsideanalyse</button>
+          <button type="button" class="bob-template-btn" data-template-id="markedsforing">Markedsføringsstatus</button>
+        </div>
+      </div>
       <form class="bob-form" id="bob-task-form" hidden>
         <div class="field">
           <label for="bob-task-title">Tittel</label>
@@ -623,6 +668,44 @@ DASHBOARD_HTML = """\
 
     let serviceActionsEnabled = false;
     let bobTasksEnabled = false;
+
+    const BOB_TASK_TEMPLATES = [
+      {
+        id: "morgenbrief",
+        label: "Morgenbrief",
+        title: "Lag morgenbrief",
+        body:
+          "Lag en kort morgenbrief for Truls med prioriteringer, relevante oppgaver og anbefalt fokus for arbeidsdagen.",
+      },
+      {
+        id: "ukesrapport",
+        label: "Ukesrapport",
+        title: "Lag ukesrapport",
+        body:
+          "Lag en ukesrapport for Truls med oppsummering av viktig arbeid, åpne punkter, risikoer og anbefalte neste steg.",
+      },
+      {
+        id: "konkurrentanalyse",
+        label: "Konkurrentanalyse",
+        title: "Kjør konkurrentanalyse",
+        body:
+          "Kjør en konkurrentanalyse for Tirna med fokus på relevante fagskole- og kursaktører, tydelige funn, kilder og anbefalte tiltak.",
+      },
+      {
+        id: "nettsideanalyse",
+        label: "Nettsideanalyse",
+        title: "Analyser nettside",
+        body:
+          "Analyser en nettside for Tirna med fokus på budskap, konvertering, SEO, brukerreise og konkrete forbedringsforslag. Be om URL dersom den ikke er oppgitt i oppgaven.",
+      },
+      {
+        id: "markedsforing",
+        label: "Markedsføringsstatus",
+        title: "Lag status for markedsføring",
+        body:
+          "Lag en kort status for markedsføring med pågående aktiviteter, flaskehalser, prioriterte tiltak og forslag til hva Truls bør følge opp først.",
+      },
+    ];
     let bobTasksCache = [];
     let bobHighlightTaskId = null;
     let bobHighlightTimer = null;
@@ -756,15 +839,29 @@ DASHBOARD_HTML = """\
       }, 8000);
     }
 
+    function setBobTaskCreateControlsDisabled(disabled) {
+      const submitBtn = document.getElementById("bob-task-submit");
+      if (submitBtn) {
+        submitBtn.disabled = disabled;
+      }
+      document.querySelectorAll(".bob-template-btn").forEach((btn) => {
+        btn.disabled = disabled;
+      });
+    }
+
     function updateBobTasksUi(enabled) {
       bobTasksEnabled = !!enabled;
       const form = document.getElementById("bob-task-form");
+      const templates = document.getElementById("bob-task-templates");
       const disabled = document.getElementById("bob-task-disabled");
       const historyContent = document.getElementById("bob-history-content");
       const historyDisabled = document.getElementById("bob-history-disabled");
       const inboxContent = document.getElementById("bob-inbox-content");
       const inboxDisabled = document.getElementById("bob-inbox-disabled");
       form.hidden = !bobTasksEnabled;
+      if (templates) {
+        templates.hidden = !bobTasksEnabled;
+      }
       disabled.hidden = bobTasksEnabled;
       historyContent.hidden = !bobTasksEnabled;
       historyDisabled.hidden = bobTasksEnabled;
@@ -1013,45 +1110,86 @@ DASHBOARD_HTML = """\
       }
     }
 
-    async function submitBobTask(event) {
-      event.preventDefault();
+    async function submitBobTaskPayload({ title, body, clearForm, successLead }) {
       if (!bobTasksEnabled) {
-        return;
+        return { ok: false };
       }
-      const submitBtn = document.getElementById("bob-task-submit");
-      const titleInput = document.getElementById("bob-task-title");
-      const bodyInput = document.getElementById("bob-task-body");
-      submitBtn.disabled = true;
+      setBobTaskCreateControlsDisabled(true);
       clearBobTaskResult();
 
       const result = await fetchJson("/api/bob/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: titleInput.value,
-          body: bodyInput.value,
-        }),
+        body: JSON.stringify({ title, body }),
       });
 
       if (!result.ok) {
         setBobTaskResult(result.error || "Kunne ikke sende oppgave", "bad");
-        submitBtn.disabled = false;
-        return;
+        setBobTaskCreateControlsDisabled(false);
+        return result;
       }
 
       const data = result.data;
+      const lead = successLead || "Oppgave opprettet.";
       setBobTaskResult(
-        `Oppgave opprettet. task_id: ${data.task_id} · audit_id: ${data.audit_id}`,
+        `${lead} task_id: ${data.task_id} · audit_id: ${data.audit_id}`,
         "ok"
       );
-      titleInput.value = "";
-      bodyInput.value = "";
-      submitBtn.disabled = false;
+      if (clearForm) {
+        const titleInput = document.getElementById("bob-task-title");
+        const bodyInput = document.getElementById("bob-task-body");
+        if (titleInput) {
+          titleInput.value = "";
+        }
+        if (bodyInput) {
+          bodyInput.value = "";
+        }
+      }
+      setBobTaskCreateControlsDisabled(false);
       scheduleBobHighlight(data.task_id);
       await loadBobHistory();
       if (data.task_id) {
         await loadBobTaskDetail(data.task_id);
       }
+      return result;
+    }
+
+    async function sendBobTaskTemplate(templateId) {
+      const template = BOB_TASK_TEMPLATES.find((item) => item.id === templateId);
+      if (!template || !bobTasksEnabled) {
+        return;
+      }
+      const btn = document.querySelector(
+        `.bob-template-btn[data-template-id="${templateId}"]`
+      );
+      const prevLabel = btn ? btn.textContent : template.label;
+      if (btn) {
+        btn.textContent = "Sender …";
+      }
+      await submitBobTaskPayload({
+        title: template.title,
+        body: template.body,
+        clearForm: false,
+        successLead: "Oppgave sendt til Bob.",
+      });
+      if (btn) {
+        btn.textContent = prevLabel;
+      }
+    }
+
+    async function submitBobTask(event) {
+      event.preventDefault();
+      if (!bobTasksEnabled) {
+        return;
+      }
+      const titleInput = document.getElementById("bob-task-title");
+      const bodyInput = document.getElementById("bob-task-body");
+      await submitBobTaskPayload({
+        title: titleInput.value,
+        body: bodyInput.value,
+        clearForm: true,
+        successLead: "Oppgave opprettet.",
+      });
     }
 
     function setActionResult(message, tone) {
@@ -1273,6 +1411,9 @@ DASHBOARD_HTML = """\
       }
     });
     document.getElementById("bob-task-form").addEventListener("submit", submitBobTask);
+    document.querySelectorAll(".bob-template-btn").forEach((btn) => {
+      btn.addEventListener("click", () => sendBobTaskTemplate(btn.dataset.templateId));
+    });
     document.getElementById("bob-history-refresh").addEventListener("click", () => {
       loadBobHistory();
     });

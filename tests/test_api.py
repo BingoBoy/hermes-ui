@@ -96,6 +96,21 @@ def test_dashboard_includes_bob_task_submission_ui() -> None:
     assert "asynkron kanban" in body
 
 
+def test_dashboard_includes_bob_task_templates_ui() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "bob-task-templates" in body
+    assert "Bob task-maler" in body
+    assert "BOB_TASK_TEMPLATES" in body
+    assert "submitBobTaskPayload" in body
+    assert "sendBobTaskTemplate" in body
+    assert "Morgenbrief" in body
+    assert "Markedsføringsstatus" in body
+    assert 'data-template-id="morgenbrief"' in body
+
+
 def test_dashboard_includes_restart_confirmation_ui() -> None:
     response = client.get("/")
 
