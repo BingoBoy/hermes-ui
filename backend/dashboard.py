@@ -230,6 +230,53 @@ DASHBOARD_HTML = """\
       gap: 10px;
       flex-wrap: wrap;
     }
+    .bob-section {
+      margin-top: 20px;
+    }
+    .bob-section h2 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+    }
+    .bob-intro {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin: 0 0 14px;
+      line-height: 1.5;
+    }
+    .bob-form {
+      display: grid;
+      gap: 12px;
+      max-width: 640px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .field input,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      background: var(--card);
+    }
+    .field textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .bob-disabled {
+      border-left: 4px solid var(--border);
+      background: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
   </style>
 </head>
 <body>
@@ -303,6 +350,32 @@ DASHBOARD_HTML = """\
           <details><summary>Teknisk JSON</summary><pre id="stderr-json">Loading...</pre></details>
         </article>
       </div>
+    </section>
+
+    <section class="card bob-section" id="bob-task-section" aria-label="Send oppgave til Bob">
+      <h2>Send oppgave til Bob</h2>
+      <p class="bob-intro" id="bob-task-intro">
+        Oppretter en asynkron kanban-oppgave på Bob — ikke live chat og ikke terminal.
+      </p>
+      <div class="bob-disabled" id="bob-task-disabled" hidden>
+        Bob-oppgaver er deaktivert på denne serveren (<code>ALLOW_BOB_TASKS=false</code>).
+      </div>
+      <form class="bob-form" id="bob-task-form" hidden>
+        <div class="field">
+          <label for="bob-task-title">Tittel</label>
+          <input type="text" id="bob-task-title" name="title" maxlength="200" required
+            placeholder="Kort oppgavetittel" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="bob-task-body">Beskrivelse (valgfri)</label>
+          <textarea id="bob-task-body" name="body" maxlength="4000"
+            placeholder="Hva skal Bob gjøre?"></textarea>
+        </div>
+        <div class="action-row">
+          <button type="submit" id="bob-task-submit">Send oppgave</button>
+        </div>
+      </form>
+      <div class="action-result" id="bob-task-result" aria-live="polite"></div>
     </section>
 
     <section class="notice" id="dashboard-notice">
@@ -383,6 +456,63 @@ DASHBOARD_HTML = """\
     }
 
     let serviceActionsEnabled = false;
+    let bobTasksEnabled = false;
+
+    function setBobTaskResult(message, tone) {
+      const target = document.getElementById("bob-task-result");
+      target.textContent = message;
+      target.className = "action-result " + tone;
+    }
+
+    function clearBobTaskResult() {
+      const target = document.getElementById("bob-task-result");
+      target.textContent = "";
+      target.className = "action-result";
+    }
+
+    function updateBobTasksUi(enabled) {
+      bobTasksEnabled = !!enabled;
+      const form = document.getElementById("bob-task-form");
+      const disabled = document.getElementById("bob-task-disabled");
+      form.hidden = !bobTasksEnabled;
+      disabled.hidden = bobTasksEnabled;
+    }
+
+    async function submitBobTask(event) {
+      event.preventDefault();
+      if (!bobTasksEnabled) {
+        return;
+      }
+      const submitBtn = document.getElementById("bob-task-submit");
+      const titleInput = document.getElementById("bob-task-title");
+      const bodyInput = document.getElementById("bob-task-body");
+      submitBtn.disabled = true;
+      clearBobTaskResult();
+
+      const result = await fetchJson("/api/bob/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: titleInput.value,
+          body: bodyInput.value,
+        }),
+      });
+
+      if (!result.ok) {
+        setBobTaskResult(result.error || "Kunne ikke sende oppgave", "bad");
+        submitBtn.disabled = false;
+        return;
+      }
+
+      const data = result.data;
+      setBobTaskResult(
+        `Oppgave opprettet. task_id: ${data.task_id} · audit_id: ${data.audit_id}`,
+        "ok"
+      );
+      titleInput.value = "";
+      bodyInput.value = "";
+      submitBtn.disabled = false;
+    }
 
     function setActionResult(message, tone) {
       const target = document.getElementById("hermes-action-result");
@@ -396,14 +526,32 @@ DASHBOARD_HTML = """\
       target.className = "action-result";
     }
 
+    function updateDashboardNotice() {
+      const notice = document.getElementById("dashboard-notice");
+      const parts = [];
+      if (serviceActionsEnabled) {
+        parts.push(
+          "Gateway restart er aktivert (ALLOW_SERVICE_ACTIONS=true) og krever bekreftelse."
+        );
+      }
+      if (bobTasksEnabled) {
+        parts.push(
+          "Bob-oppgaver er aktivert (ALLOW_BOB_TASKS=true) via kanban — ikke chat."
+        );
+      }
+      if (!parts.length) {
+        notice.textContent =
+          "Read-only kontrollpanel. Write-actions krever ALLOW_SERVICE_ACTIONS eller ALLOW_BOB_TASKS på serveren.";
+      } else {
+        notice.textContent = parts.join(" ");
+      }
+    }
+
     function updateServiceActionsUi(enabled) {
       serviceActionsEnabled = !!enabled;
       const actions = document.getElementById("hermes-actions");
-      const notice = document.getElementById("dashboard-notice");
       actions.hidden = !serviceActionsEnabled;
-      notice.textContent = serviceActionsEnabled
-        ? "Service actions er aktivert for Hermes Gateway. Restart krever eksplisitt bekreftelse og logges."
-        : "Read-only kontrollpanel. Restart er tilgjengelig bare når ALLOW_SERVICE_ACTIONS=true på serveren.";
+      updateDashboardNotice();
     }
 
     function openRestartModal() {
@@ -459,10 +607,13 @@ DASHBOARD_HTML = """\
         ["Bind", `${data.bind_host}:${data.bind_port}`],
         ["Read-only", data.read_only ? "Ja" : "Nei"],
         ["Service actions", data.allow_service_actions ? "Aktivert" : "Deaktivert"],
+        ["Bob tasks", data.allow_bob_tasks ? "Aktivert" : "Deaktivert"],
         ["Sjekket", data.checked_at],
       ]);
       setJson("service-json", data);
       updateServiceActionsUi(data.allow_service_actions);
+      updateBobTasksUi(data.allow_bob_tasks);
+      updateDashboardNotice();
     }
 
     function renderHermes(payload) {
@@ -581,6 +732,7 @@ DASHBOARD_HTML = """\
         closeRestartModal();
       }
     });
+    document.getElementById("bob-task-form").addEventListener("submit", submitBobTask);
     loadDashboard();
   </script>
 </body>

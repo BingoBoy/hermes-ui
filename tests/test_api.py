@@ -57,6 +57,17 @@ def test_dashboard_returns_read_only_status_ui() -> None:
     assert "log-view" in body
 
 
+def test_dashboard_includes_bob_task_submission_ui() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "bob-task-section" in body
+    assert "Send oppgave til Bob" in body
+    assert "bob-task-form" in body
+    assert "asynkron kanban" in body
+
+
 def test_dashboard_includes_restart_confirmation_ui() -> None:
     response = client.get("/")
 
