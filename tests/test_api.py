@@ -118,6 +118,8 @@ def test_dashboard_includes_bob_result_actions_ui() -> None:
     assert "Vis mindre" in body
     assert "bob-detail-result-toolbar" in body
     assert "bindResultExpandToggle" in body
+    assert "bob-detail-artifacts-wrap" in body
+    assert "Kopier artifakt" in body
 
 
 def test_dashboard_includes_bob_task_submission_ui() -> None:

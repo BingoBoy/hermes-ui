@@ -39,6 +39,9 @@ MAX_BODY_LENGTH = 4000
 ACTION_TIMEOUT_SECONDS = 30.0
 COOLDOWN_SECONDS = 60
 MAX_DETAIL_LENGTH = 200
+MAX_ARTIFACT_BYTES = 20000
+MAX_ARTIFACTS = 3
+ALLOWED_ARTIFACT_SUFFIXES = frozenset({".md", ".txt", ".json"})
 
 CommandRunner = Callable[[list[str], float], subprocess.CompletedProcess[str]]
 
@@ -647,6 +650,73 @@ def _enrich_list_task_summaries(
             enriched += 1
 
 
+def _safe_relative_artifact_path(path: Path, workspace: Path) -> str | None:
+    try:
+        resolved_path = path.resolve(strict=True)
+        resolved_workspace = workspace.resolve(strict=True)
+    except OSError:
+        return None
+    if resolved_path.suffix.lower() not in ALLOWED_ARTIFACT_SUFFIXES:
+        return None
+    try:
+        relative = resolved_path.relative_to(resolved_workspace)
+    except ValueError:
+        return None
+    if any(part in {"", ".", ".."} for part in relative.parts):
+        return None
+    return relative.as_posix()
+
+
+def _read_task_artifacts(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    task = payload.get("task")
+    if not isinstance(task, dict):
+        return []
+    workspace_raw = task.get("workspace_path")
+    if not isinstance(workspace_raw, str) or not workspace_raw.strip():
+        return []
+    workspace = Path(workspace_raw)
+    runs = payload.get("runs")
+    if not isinstance(runs, list):
+        return []
+
+    artifacts: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for run in runs:
+        if len(artifacts) >= MAX_ARTIFACTS:
+            break
+        if not isinstance(run, dict):
+            continue
+        metadata = run.get("metadata")
+        if not isinstance(metadata, dict):
+            continue
+        file_path_raw = metadata.get("file_path")
+        if not isinstance(file_path_raw, str) or not file_path_raw.strip():
+            continue
+        file_path = Path(file_path_raw)
+        relative_path = _safe_relative_artifact_path(file_path, workspace)
+        if relative_path is None or relative_path in seen:
+            continue
+        try:
+            size = file_path.stat().st_size
+        except OSError:
+            continue
+        if size > MAX_ARTIFACT_BYTES:
+            continue
+        try:
+            content = file_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        artifacts.append(
+            {
+                "relative_path": relative_path,
+                "size_bytes": size,
+                "content": content,
+            }
+        )
+        seen.add(relative_path)
+    return artifacts
+
+
 def run_list_kanban_tasks(
     settings: Settings,
     *,
@@ -795,4 +865,7 @@ def build_task_show_response(
     latest_summary = payload.get("latest_summary")
     if latest_summary is not None:
         response["latest_summary"] = latest_summary
+    artifacts = _read_task_artifacts(payload)
+    if artifacts:
+        response["artifacts"] = artifacts
     return response

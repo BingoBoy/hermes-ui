@@ -739,6 +739,96 @@ def test_api_show_task_returns_200_when_enabled(
     assert payload["events"]
 
 
+def test_show_task_includes_safe_workspace_artifact(
+    tmp_path: Path,
+) -> None:
+    settings = Settings(allow_bob_tasks=True)
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    artifact = workspace / "morgenbrief.md"
+    artifact.write_text("Morgenbrief content", encoding="utf-8")
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        stdout = json.dumps(
+            {
+                "task": {
+                    "id": "t_artifact",
+                    "title": "Artifact task",
+                    "status": "done",
+                    "workspace_path": str(workspace),
+                },
+                "events": [],
+                "comments": [],
+                "runs": [
+                    {
+                        "metadata": {
+                            "file_path": str(artifact),
+                        }
+                    }
+                ],
+            }
+        )
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=stdout,
+            stderr="",
+        )
+
+    payload = build_task_show_response(settings, "t_artifact", runner=fake_runner)
+
+    assert payload["success"] is True
+    assert payload["artifacts"] == [
+        {
+            "relative_path": "morgenbrief.md",
+            "size_bytes": len("Morgenbrief content"),
+            "content": "Morgenbrief content",
+        }
+    ]
+
+
+def test_show_task_rejects_artifact_path_outside_workspace(
+    tmp_path: Path,
+) -> None:
+    settings = Settings(allow_bob_tasks=True)
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    outside = tmp_path / "outside.md"
+    outside.write_text("Outside content", encoding="utf-8")
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        stdout = json.dumps(
+            {
+                "task": {
+                    "id": "t_artifact",
+                    "title": "Artifact task",
+                    "status": "done",
+                    "workspace_path": str(workspace),
+                },
+                "events": [],
+                "comments": [],
+                "runs": [
+                    {
+                        "metadata": {
+                            "file_path": str(outside),
+                        }
+                    }
+                ],
+            }
+        )
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=stdout,
+            stderr="",
+        )
+
+    payload = build_task_show_response(settings, "t_artifact", runner=fake_runner)
+
+    assert payload["success"] is True
+    assert "artifacts" not in payload
+
+
 def test_api_list_tasks_returns_502_on_cli_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

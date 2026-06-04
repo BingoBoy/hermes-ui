@@ -623,6 +623,10 @@ DASHBOARD_HTML = """\
               Vis mer
             </button>
           </div>
+          <div id="bob-detail-artifacts-wrap" hidden>
+            <p class="log-meta" style="margin: 10px 0 4px;">Artifakter</p>
+            <div id="bob-detail-artifacts"></div>
+          </div>
           <details><summary>Teknisk JSON</summary><pre id="bob-detail-json"></pre></details>
         </div>
       </div>
@@ -1058,6 +1062,37 @@ DASHBOARD_HTML = """\
       };
     }
 
+    function renderBobTaskArtifacts(payload) {
+      const wrap = document.getElementById("bob-detail-artifacts-wrap");
+      const target = document.getElementById("bob-detail-artifacts");
+      const artifacts = Array.isArray(payload.artifacts) ? payload.artifacts : [];
+      target.innerHTML = "";
+      if (!artifacts.length) {
+        wrap.hidden = true;
+        return;
+      }
+      wrap.hidden = false;
+      for (const artifact of artifacts) {
+        const item = document.createElement("div");
+        item.className = "bob-artifact-item";
+        const title = document.createElement("p");
+        title.className = "log-meta";
+        title.textContent = `${artifact.relative_path || "artifact"} (${artifact.size_bytes || 0} bytes)`;
+        const actions = document.createElement("div");
+        actions.className = "bob-result-toolbar";
+        actions.appendChild(
+          createBobCopyButton("Kopier artifakt", () => artifact.content || "")
+        );
+        const content = document.createElement("pre");
+        content.className = "bob-result-block";
+        content.textContent = artifact.content || "";
+        item.appendChild(title);
+        item.appendChild(actions);
+        item.appendChild(content);
+        target.appendChild(item);
+      }
+    }
+
     function inboxMetaLine(task) {
       const parts = [];
       if (task.id) {
@@ -1354,6 +1389,7 @@ DASHBOARD_HTML = """\
         resultToolbar.innerHTML = "";
         resultToggle.hidden = true;
       }
+      renderBobTaskArtifacts(payload);
       setJson("bob-detail-json", payload);
     }
 
