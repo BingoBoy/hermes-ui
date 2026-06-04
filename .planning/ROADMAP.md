@@ -178,6 +178,20 @@
 
 **Artifacts:** `.planning/phases/06C-task-templates/06C-CONTEXT.md`
 
+## Phase 6D: Template Inputs
+
+**Goal:** Optional input fields on Bob task templates; values merge into task `body` before existing `POST /api/bob/tasks`.
+
+**Status:** Complete — verified 2026-06-04 (local tests + Bob deploy)
+
+**Scope:**
+
+- Frontend-only in `backend/dashboard.py`
+- Per-template optional fields + «Send mal til Bob»
+- No new backend routes
+
+**Artifacts:** `.planning/phases/06D-template-inputs/06D-CONTEXT.md`
+
 ## Phase 6: Operations Enrichment
 
 **Goal:** Add richer operational views for launchctl, Docker, and adjacent services where relevant.
