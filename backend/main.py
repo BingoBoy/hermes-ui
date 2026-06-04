@@ -28,6 +28,7 @@ from backend.service_actions import (
     ServiceActionsDisabled,
     build_restart_response,
 )
+from backend.operations import get_operations_status
 from backend.status import get_hermes_status, get_service_status, get_system_status
 
 
@@ -63,6 +64,12 @@ def api_system() -> dict:
 def api_hermes_status() -> dict:
     settings = get_settings()
     return get_hermes_status(settings)
+
+
+@app.get("/api/operations")
+def api_operations() -> dict:
+    settings = get_settings()
+    return get_operations_status(settings)
 
 
 @app.post("/api/hermes/restart")

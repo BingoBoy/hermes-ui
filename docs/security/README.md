@@ -221,3 +221,13 @@ curl -sS -D - -o /dev/null https://hermes-ui.strategistudio.no/api/status
 Expected: redirect to Cloudflare Access, not direct Hermes UI JSON.
 
 See `docs/architecture/cloudflare.md` for deployment details.
+
+## Operations enrichment (Phase 6)
+
+`GET /api/operations` is read-only operational metadata:
+
+- Allowlisted plist paths from server config (`HERMES_UI_PLIST_PATH`, `HERMES_GATEWAY_PLIST_PATH`) — never from the client.
+- Fixed `launchctl print gui/{uid}/{label}` with labels from settings only.
+- Plist `EnvironmentVariables` values are **not** returned; key names only.
+- Docker inspection runs only when `HERMES_OPS_INCLUDE_DOCKER=true` (default false).
+- No new POST routes; `shell=True` remains forbidden.

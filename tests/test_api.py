@@ -142,8 +142,22 @@ def test_dashboard_orders_bob_communication_before_operations() -> None:
     body = response.text
     assert body.index('id="bob-inbox-section"') < body.index('id="bob-task-section"')
     assert body.index('id="bob-task-section"') < body.index('id="bob-history-section"')
-    assert body.index('id="bob-history-section"') < body.index('aria-label="Statuskort"')
+    assert body.index('id="bob-history-section"') < body.index('id="operations-section"')
+    assert body.index('id="operations-section"') < body.index('aria-label="Statuskort"')
     assert body.index('aria-label="Statuskort"') < body.index("Gateway-logger")
+
+
+def test_dashboard_includes_operations_section() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "operations-section" in body
+    assert "Drift og tjenester" in body
+    assert "renderOperations" in body
+    assert 'fetchJson("/api/operations")' in body
+    assert "Hermes UI" in body
+    assert "Hermes Gateway" in body
 
 
 def test_dashboard_includes_bob_task_templates_ui() -> None:

@@ -23,6 +23,14 @@ class Settings:
     version: str = "0.1.0"
     bob_hostname: str = ""
     hermes_launchd_label: str = "ai.hermes.gateway"
+    hermes_ui_launchd_label: str = "no.truls.hermes-ui"
+    hermes_ui_plist_path: str = (
+        "~/Library/LaunchAgents/no.truls.hermes-ui.plist"
+    )
+    hermes_gateway_plist_path: str = (
+        "~/Library/LaunchAgents/ai.hermes.gateway.plist"
+    )
+    hermes_ops_include_docker: bool = False
     allow_unsafe_commands: bool = False
     allow_service_actions: bool = False
     allow_bob_tasks: bool = False
@@ -39,6 +47,21 @@ def get_settings() -> Settings:
         port=int(os.getenv("HERMES_UI_PORT", "8787")),
         bob_hostname=os.getenv("BOB_HOSTNAME", ""),
         hermes_launchd_label=os.getenv("HERMES_LAUNCHD_LABEL", "ai.hermes.gateway"),
+        hermes_ui_launchd_label=os.getenv(
+            "HERMES_UI_LAUNCHD_LABEL", "no.truls.hermes-ui"
+        ).strip()
+        or "no.truls.hermes-ui",
+        hermes_ui_plist_path=os.getenv(
+            "HERMES_UI_PLIST_PATH",
+            "~/Library/LaunchAgents/no.truls.hermes-ui.plist",
+        ).strip()
+        or "~/Library/LaunchAgents/no.truls.hermes-ui.plist",
+        hermes_gateway_plist_path=os.getenv(
+            "HERMES_GATEWAY_PLIST_PATH",
+            "~/Library/LaunchAgents/ai.hermes.gateway.plist",
+        ).strip()
+        or "~/Library/LaunchAgents/ai.hermes.gateway.plist",
+        hermes_ops_include_docker=_env_bool("HERMES_OPS_INCLUDE_DOCKER", False),
         allow_unsafe_commands=_env_bool("ALLOW_UNSAFE_COMMANDS", False),
         allow_service_actions=_env_bool("ALLOW_SERVICE_ACTIONS", False),
         allow_bob_tasks=_env_bool("ALLOW_BOB_TASKS", False),

@@ -487,6 +487,30 @@ DASHBOARD_HTML = """\
       max-height: 140px;
       overflow: hidden;
     }
+    .ops-section {
+      margin-top: 20px;
+    }
+    .ops-section h2 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+    }
+    .ops-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .ops-agent h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+    .ops-docker {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -631,6 +655,19 @@ DASHBOARD_HTML = """\
         </div>
       </div>
       <div class="action-result" id="bob-history-result" aria-live="polite"></div>
+    </section>
+
+    <section class="card ops-section" id="operations-section" aria-label="Drift og tjenester">
+      <h2>Drift og tjenester</h2>
+      <p class="bob-intro">
+        Read-only LaunchAgent-detaljer for Hermes UI og Hermes gateway (verifiserte plist-stier på serveren).
+      </p>
+      <div id="operations-agents-wrap" class="ops-grid"></div>
+      <div id="operations-docker-wrap" class="ops-docker" hidden></div>
+      <details style="margin-top: 12px;">
+        <summary>Teknisk JSON</summary>
+        <pre id="operations-json">Laster...</pre>
+      </details>
     </section>
 
     <section class="grid" aria-label="Statuskort">
@@ -1733,6 +1770,70 @@ DASHBOARD_HTML = """\
       });
     }
 
+    function renderOperations(payload) {
+      const wrap = document.getElementById("operations-agents-wrap");
+      const dockerWrap = document.getElementById("operations-docker-wrap");
+      wrap.innerHTML = "";
+      dockerWrap.hidden = true;
+      dockerWrap.textContent = "";
+
+      if (!payload.ok) {
+        wrap.innerHTML = `<p class="error-text">Kunne ikke hente driftstatus: ${escapeHtml(payload.error || "ukjent feil")}</p>`;
+        setJson("operations-json", payload);
+        return;
+      }
+
+      const data = payload.data;
+      const agents = data.launch_agents || [];
+      if (!agents.length) {
+        wrap.innerHTML = '<p class="subtle">Ingen LaunchAgent-data tilgjengelig.</p>';
+      }
+
+      for (const agent of agents) {
+        const card = document.createElement("article");
+        card.className = "card ops-agent";
+        const plist = agent.plist || {};
+        const logs = plist.log_paths || {};
+        const running = agent.running;
+        const state = (agent.launchctl_print || {}).state || "—";
+        const title = agent.id === "hermes-ui" ? "Hermes UI" : "Hermes Gateway";
+        card.innerHTML = `
+          <h3>${escapeHtml(title)}</h3>
+          <div class="status-row">
+            <span class="badge ${running ? "ok" : "warn"}">${running ? "Running" : "Not running"}</span>
+            <span class="subtle">launchd: ${escapeHtml(state)}</span>
+          </div>
+          <dl class="meta">
+            <dt>Label</dt><dd>${escapeHtml(agent.label || "—")}</dd>
+            <dt>Plist</dt><dd>${escapeHtml(agent.plist_path || "—")}</dd>
+            <dt>Program</dt><dd>${escapeHtml(plist.program_summary || "—")}</dd>
+            <dt>Stdout-logg</dt><dd>${escapeHtml(logs.stdout || "—")}</dd>
+            <dt>Stderr-logg</dt><dd>${escapeHtml(logs.stderr || "—")}</dd>
+            <dt>Arbeidsmappe</dt><dd>${escapeHtml(plist.working_directory || "—")}</dd>
+          </dl>
+        `;
+        wrap.appendChild(card);
+      }
+
+      const docker = data.docker || {};
+      if (docker.included) {
+        dockerWrap.hidden = false;
+        if (!docker.available) {
+          dockerWrap.textContent = `Docker: ${docker.detail || "utilgjengelig"}`;
+        } else {
+          const names = (docker.containers || []).join(", ") || "ingen containere";
+          dockerWrap.textContent =
+            `Docker ${docker.server_version || ""}: ${docker.container_count || 0} container(e) — ${names}`;
+        }
+      } else {
+        dockerWrap.hidden = false;
+        dockerWrap.textContent =
+          "Docker-status er deaktivert (HERMES_OPS_INCLUDE_DOCKER=false). Gateway kjører via LaunchAgent.";
+      }
+
+      setJson("operations-json", data);
+    }
+
     function renderLogPanel(metaId, containerId, jsonId, payload) {
       const meta = document.getElementById(metaId);
       if (!payload.ok) {
@@ -1755,10 +1856,11 @@ DASHBOARD_HTML = """\
 
     async function loadDashboard() {
       document.getElementById("last-updated").textContent = "Oppdaterer...";
-      const [service, hermes, system, sources, stdout, stderr] = await Promise.all([
+      const [service, hermes, system, operations, sources, stdout, stderr] = await Promise.all([
         fetchJson("/api/status"),
         fetchJson("/api/hermes/status"),
         fetchJson("/api/system"),
+        fetchJson("/api/operations"),
         fetchJson("/api/logs/sources"),
         fetchJson("/api/logs/gateway_stdout?lines=50"),
         fetchJson("/api/logs/gateway_stderr?lines=50"),
@@ -1767,6 +1869,7 @@ DASHBOARD_HTML = """\
       renderService(service);
       renderHermes(hermes);
       renderSystem(system);
+      renderOperations(operations);
       renderLogsSummary(sources, stdout, stderr);
       renderLogPanel("stdout-meta", "log-stdout", "stdout-json", stdout);
       renderLogPanel("stderr-meta", "log-stderr", "stderr-json", stderr);

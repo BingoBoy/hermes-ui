@@ -206,6 +206,18 @@ Expected: HTTP `302` redirect to Cloudflare Access login, not direct API JSON.
 
 See `docs/architecture/cloudflare.md` for full deployment details.
 
+## Operations API (Phase 6)
+
+Read-only LaunchAgent metadata for daily operations:
+
+```bash
+curl -s http://127.0.0.1:8787/api/operations | python3 -m json.tool
+```
+
+Returns structured details for `no.truls.hermes-ui` and `ai.hermes.gateway` (plist paths, program summary, log paths, launchd state). Environment variable **values** are never exposed — key names only when present.
+
+Docker block is off by default (`HERMES_OPS_INCLUDE_DOCKER=false`). On Bob (2026-06-04) Docker was not installed; gateway runs via LaunchAgent.
+
 ## Related Documents
 
 - `README.md` — quick Bob operations and API smoke tests

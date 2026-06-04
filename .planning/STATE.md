@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** **Phase 6 Operations Enrichment** — planned (`06-PLAN.md`). Next: `/gsd-execute-phase 6` after Bob preflight (task 6.1).
+**Current focus:** **Phase 6 Operations Enrichment** — implemented locally; Bob deploy after push to `origin/main`.
 
-**Last activity:** 2026-06-04 — `/gsd-plan-phase 6` completed.
+**Last activity:** 2026-06-04 — Phase 6 execute: `/api/operations` + dashboard «Drift og tjenester».
 
 ## Workflow
 
@@ -24,9 +24,9 @@ discuss -> plan -> execute -> verify
 |-------|-------|
 | Phase | 6 |
 | Name | Operations Enrichment |
-| Status | Planned — ready for execute |
+| Status | Execute complete locally — Bob deploy pending push |
 | Requirements | OPS-02, OPS-03 |
-| Next command | `/gsd-execute-phase 6` (start with Bob verify 6.1) |
+| Next command | Push + Bob pull; `/gsd-verify-work` or ship |
 
 ## Session Plan
 
