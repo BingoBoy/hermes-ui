@@ -2,13 +2,13 @@
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-06-03)
+See: `.planning/PROJECT.md` (updated 2026-06-04)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phases **5–6 + v2.1-bob-ux** reflect Bob production reality in planning docs. **No new phase selected.** Next: audit or choose from ROADMAP backlog.
+**Current focus:** Milestones **v1** and **v2.1-bob-ux** archived. **No active roadmap phase.** Next: `/gsd-new-milestone` or backlog (5B, OPS-01, UI logs).
 
-**Last activity:** 2026-06-04 — Planning sync after Phase 6 (Phase 5 Bob production, gates, backlog).
+**Last activity:** 2026-06-04 — `/gsd-complete-milestone v1` (tag `v1`).
 
 ## Workflow
 
@@ -22,11 +22,11 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | — (between phases) |
-| Name | Phase 6 shipped — Operations Enrichment |
-| Status | Shipped 2026-06-04 — production-verified on Bob |
-| Requirements | OPS-02, OPS-03 delivered |
-| Next command | `/gsd-audit-uat` or `/gsd-discuss-phase` for backlog item (5B, OPS-01, …) |
+| Phase | — (between milestones) |
+| Name | v1 + v2.1-bob-ux shipped |
+| Status | Archived 2026-06-04 — Bob production-verified |
+| Requirements | See `milestones/v1-REQUIREMENTS.md`, `milestones/v2.1-bob-ux-REQUIREMENTS.md` |
+| Next command | `/gsd-new-milestone` or `/gsd-discuss-phase` for backlog |
 
 ## Session Plan
 
@@ -279,4 +279,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after planning sync (Phase 5–6 Bob production)*
+*Last updated: 2026-06-04 after v1 milestone complete*

@@ -1,14 +1,38 @@
 # Project Milestones: Hermes UI for Bob
 
-## ROADMAP Phase 6: Operations Enrichment (Shipped: 2026-06-04)
+## v1: Safe Operations Dashboard (Shipped: 2026-06-04)
 
-**Delivered:** Read-only operational views — `GET /api/operations`, dashboard «Drift og tjenester», LaunchAgent metadata for Hermes UI and gateway.
+**Delivered:** Read-only MVP through operations enrichment — status API, bounded gateway logs, Cloudflare Access, dashboard UX, allowlisted restart and Bob kanban APIs, `GET /api/operations`.
 
-**Requirements:** OPS-02, OPS-03
+**Phases:** 1, 2, 3, 4, 4.5, 5 (5A/5C/5D), 6 — **7 phase entries**
 
-**Production:** Bob `@8632f49` (feat); `/api/operations` verified; Docker off on Bob.
+**Known gaps at close (tech debt, not blockers):**
 
-**Git range:** `01d04f8` → `8632f49`
+- 5B gateway start/stop deferred
+- OPS-01 tunnel status card not in UI
+- Phases 1–5 lack formal `*-VERIFICATION.md`
+- Bob worker `hermes-assignee` — external ops
+
+**Key accomplishments:**
+
+- FastAPI dashboard on `127.0.0.1:8787` with security boundaries
+- Production URL `https://hermes-ui.strategistudio.no`
+- Gateway restart + Bob task create/list/show live on Bob
+- LaunchAgent operational cards (Phase 6)
+
+**Stats:**
+
+- Git: `c6afa4f` → `dd7e661` (63 commits on `main`)
+- Tests: 77 pytest passing at close
+- Audit: `tech_debt` — see `.planning/milestones/v1-MILESTONE-AUDIT.md`
+
+**Archives:**
+
+- Roadmap: `.planning/milestones/v1-ROADMAP.md`
+- Requirements: `.planning/milestones/v1-REQUIREMENTS.md`
+- Audit: `.planning/milestones/v1-MILESTONE-AUDIT.md`
+
+**Tag:** `v1`
 
 ---
 
@@ -20,32 +44,22 @@
 
 **Phases completed:** 6A–6N (14 phase entries; 6N docs-only closure)
 
-**Key accomplishments:**
-
-- Bob Inbox and Bob-oppgaver follow-up with auto-refresh
-- Five one-click task templates with optional per-template inputs
-- Copy/expand result actions (UAT closed via 6I on `t_7b978d4f`)
-- Server-side `HERMES_BOB_TASK_ASSIGNEE=default` for task spawn
-- `latest_summary` fallback when kanban `result` is null
-- Bob-first dashboard section order
-- Read-only safe worker artifacts in task detail
-- Assignee column with `Legacy unassigned` for old ready tasks
-
 **Archives:**
 
 - Roadmap: `.planning/milestones/v2.1-bob-ux-ROADMAP.md`
 - Requirements: `.planning/milestones/v2.1-bob-ux-REQUIREMENTS.md`
 - Audit: `.planning/milestones/v2.1-bob-ux-MILESTONE-AUDIT.md`
 
+**Tag:** `v2.1-bob-ux`
+
 ---
 
 ## What's next
 
-Phases **v2.1-bob-ux** and **ROADMAP Phase 6** are shipped. No active roadmap phase selected.
+Milestones **v1** and **v2.1-bob-ux** are shipped and archived. No `REQUIREMENTS.md` on disk — define the next milestone with:
 
-**Recommended:**
+```text
+/gsd-new-milestone
+```
 
-1. `/gsd-audit-uat` or `/gsd-audit-milestone` — reconcile planning vs production
-2. Choose next work from `.planning/ROADMAP.md` **Backlog** (e.g. 5B, OPS-01, UI logs) via `/gsd-discuss-phase` or `/gsd-add-phase`
-
-**Not automatic:** `/gsd-complete-milestone` for whole project until audit clarifies scope.
+Or pick backlog work via `/gsd-discuss-phase` / `/gsd-add-phase` (5B, OPS-01, UI logs).
