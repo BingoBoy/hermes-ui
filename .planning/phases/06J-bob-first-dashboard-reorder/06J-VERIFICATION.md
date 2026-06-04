@@ -27,8 +27,12 @@ grep -R "@app.route\\|@.*route" backend/ || true
 
 ## Bob deploy
 
-Pending:
-
-- Pull main on Bob.
-- Restart Hermes UI LaunchAgent.
-- Confirm dashboard HTML order on Bob.
+- PASS — deployed commit `c8bf243` to Bob with fast-forward pull.
+- PASS — restarted Hermes UI LaunchAgent with `launchctl kickstart -k gui/$(id -u)/no.truls.hermes-ui`.
+- PASS — Bob dashboard HTML order:
+  1. `bob-inbox-section`
+  2. `bob-task-section`
+  3. `bob-history-section`
+  4. `Statuskort`
+  5. `Gateway-logger`
+- PASS — Bob repo status clean on `main...origin/main`.
