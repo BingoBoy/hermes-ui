@@ -177,11 +177,17 @@ Production-verified on Bob. Audit: [milestones/v2.1-bob-ux-MILESTONE-AUDIT.md](m
 
 **Goal:** Add richer operational views for launchctl, Docker, and adjacent services where relevant.
 
-**Status:** Not started — **next official roadmap phase** (after v2.1-bob-ux shipped 2026-06-04)
+**Status:** Planned — 2026-06-04 (`06-PLAN.md`, `06-RESEARCH.md`)
 
 **Requirements:** OPS-02, OPS-03
 
 **Note:** Distinct from decimal phases 6A–6M (Bob Dashboard / Kanban UX), which are complete.
+
+**Planning artifacts:**
+
+- `.planning/phases/06-operations-enrichment/06-CONTEXT.md`
+- `.planning/phases/06-operations-enrichment/06-RESEARCH.md`
+- `.planning/phases/06-operations-enrichment/06-PLAN.md`
 
 **Success criteria:**
 1. LaunchAgent detail display uses verified label/plist values.

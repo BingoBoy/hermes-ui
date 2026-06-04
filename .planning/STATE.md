@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** **v2.1-bob-ux shipped** (2026-06-04). Next: `/gsd-plan-phase 6` — ROADMAP Phase 6 Operations Enrichment (not decimal 6A–6M).
+**Current focus:** **Phase 6 Operations Enrichment** — planned (`06-PLAN.md`). Next: `/gsd-execute-phase 6` after Bob preflight (task 6.1).
 
-**Last activity:** 2026-06-04 — Milestone v2.1-bob-ux archived; tag `v2.1-bob-ux`.
+**Last activity:** 2026-06-04 — `/gsd-plan-phase 6` completed.
 
 ## Workflow
 
@@ -22,11 +22,11 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | — (between milestones) |
-| Name | v2.1-bob-ux complete; awaiting ROADMAP Phase 6 |
-| Status | Delmilestone **2.1-bob-ux** archived and tagged |
-| Last shipped | Bob Dashboard / Kanban UX 6A–6M — production-verified on Bob |
-| Next command | `/gsd-plan-phase 6` (Operations Enrichment) |
+| Phase | 6 |
+| Name | Operations Enrichment |
+| Status | Planned — ready for execute |
+| Requirements | OPS-02, OPS-03 |
+| Next command | `/gsd-execute-phase 6` (start with Bob verify 6.1) |
 
 ## Session Plan
 
