@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 6M Bob Task Queue Hygiene — **shipped to `main`** (commits `1cd4e06`, `16d1da6`); deployed and verified on Bob. Next: `/gsd-progress` for next phase.
+**Current focus:** Delmilestone **2.1-bob-ux** (Bob Dashboard / Kanban UX 6A–6M) — **production-verified** on `main`; documentation cleanup complete (6N). Next: `/gsd-complete-milestone 2.1-bob-ux`, then `/gsd-plan-phase 6` (ROADMAP Operations Enrichment).
 
-**Last activity:** 2026-06-04 — Phase 6M shipped direct to `main` (no PR; code-only assignee labels in dashboard).
+**Last activity:** 2026-06-04 — Phase 6N docs-only cleanup for Bob UX milestone closure.
 
 ## Workflow
 
@@ -22,12 +22,11 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 5A |
-| Name | Restart-only Verified Service Action |
-| Status | Execute complete — pending Bob deploy verification |
-| Requirements | ACT-03 (restart), ACT-04 (audit + confirmation) |
-| Current command | `/gsd-execute-phase 5A` completed |
-| Next command | Deploy to Bob, set `ALLOW_SERVICE_ACTIONS=true`, verify restart; then 5B |
+| Phase | 6N (complete) → milestone close |
+| Name | Bob UX Milestone Documentation Cleanup |
+| Status | Docs-only cleanup done — Bob UX 6A–6M ready for `complete-milestone` |
+| Delmilestone | **2.1-bob-ux** — production-verified (`main` @ 6M+, Bob `/api/status` ok) |
+| Next command | `/gsd-complete-milestone 2.1-bob-ux` then `/gsd-plan-phase 6` |
 
 ## Session Plan
 
@@ -220,6 +219,18 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - Phase 5 discuss mapped service actions and Bob entry; restart kickstart live-verified; 5A execute implemented locally.
 - Phase 5C discuss locked kanban create API/UI/security; local CLI JSON verified; Bob verify pending before execute.
 - Phase 6M shipped read-only Bob-oppgaver assignee labels (`Legacy unassigned` for ready tasks without assignee); no queue mutation.
+- Delmilestone **2.1-bob-ux** (6A–6M): Bob Dashboard / Kanban UX complete on `main`; audit `.planning/v2.1-bob-ux-MILESTONE-AUDIT.md` (`tech_debt`, no blockers).
+- `REQUIREMENTS.md` traceability for Bob UX deferred until `/gsd-complete-milestone 2.1-bob-ux`.
+
+## Delmilestone 2.1-bob-ux (6A–6M, 2026-06-04)
+
+**Status:** Production-verified on Bob; documentation aligned in 6N.
+
+**Scope:** Dashboard-only Bob communication UX on top of 5C/5D APIs — templates, inbox, results, assignee labels, artifacts (read-only).
+
+**Audit:** `.planning/v2.1-bob-ux-MILESTONE-AUDIT.md` — verdict `tech_debt` (worker `hermes-assignee` external; REQUIREMENTS deferral).
+
+**Next official roadmap work:** ROADMAP **Phase 6: Operations Enrichment** (not the decimal 6A–6M track).
 
 ## Phase 6M Ship (2026-06-04)
 
@@ -251,4 +262,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after Phase 6M ship (direct to main)*
+*Last updated: 2026-06-04 after Phase 6N Bob UX milestone documentation cleanup*
