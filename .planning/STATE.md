@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 5 - Verified Service Actions
+**Current focus:** Phase 5 - Verified Service Actions and Bob Interaction Planning
 
 ## Workflow
 
@@ -20,12 +20,12 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 4.5 |
-| Name | Dashboard UX Cleanup |
-| Status | Complete |
-| Requirements | UI-01, UI-02, UI-03, UI-04 |
-| Current command | `/gsd-discuss-phase 4.5` completed with dashboard UX implementation |
-| Next command | `/gsd-discuss-phase 5` for verified service actions |
+| Phase | 5 |
+| Name | Verified Service Actions and Bob Interaction Planning |
+| Status | Discuss complete — ready for 5A plan/execute |
+| Requirements | ACT-01, ACT-02, ACT-03, ACT-04 (Track A); Bob entry (Track B, 5C–5D) |
+| Current command | `/gsd-discuss-phase 5` completed — planning docs written |
+| Next command | `/gsd-plan-phase 5A` or `/gsd-execute-phase 5A` using `05-PLAN.md` |
 
 ## Session Plan
 
@@ -112,14 +112,37 @@ Atomic tasks:
 - Manual refresh button added
 - Read-only API routes unchanged
 
+## Phase 5 Planning Findings (2026-06-04)
+
+**Track A — Service Actions (verified on Bob via SSH):**
+
+| Action | Command | Status |
+|--------|---------|--------|
+| Status detail | `launchctl print gui/$(id -u)/ai.hermes.gateway` | Verified |
+| Restart | `launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway` | **Live verified** (PID changed) |
+| Start | `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist` | Documented, not live-tested |
+| Stop | `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist` | Documented, not live-tested |
+
+Decision: use direct fixed `launchctl` argv (no `hermes gateway` CLI, no shell). First execute slice: **5A restart-only**.
+
+**Track B — Bob Interaction (mapped on Bob):**
+
+- No Hermes Gateway HTTP listen port for UI ingress.
+- Primary recommended entry: `hermes kanban create` (5C).
+- Read-only history: `hermes kanban list/show`, `hermes sessions list` (5D).
+- Not recommended: `hermes -z`, browser chat, `hermes send`, arbitrary CLI flags from client.
+
+Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/service-actions.md`, `docs/api/bob-interaction.md`.
+
 ## Open Gates
 
-- Verify actual Hermes launchctl commands before implementing start, stop, or restart in UI.
-- Log display is implemented only from verified server-side allowlisted files.
-- Keep Phase 1 read-only complete; future phases must not reintroduce write actions without their own verification.
+- Live-verify bootstrap/bootout before implementing start/stop (5B).
+- Live-verify `hermes kanban create` JSON contract before Bob task API (5C).
+- Set `ALLOW_SERVICE_ACTIONS=true` on Bob only when ready to test 5A execute.
+- Log display remains server-side allowlisted only.
 - Keep real `.env` out of git.
 - Keep `ALLOW_UNSAFE_COMMANDS=false`.
-- Do not add any API route that accepts a file path from client input.
+- Do not add any API route that accepts a file path or shell command from client input.
 
 ## Memory
 
@@ -132,6 +155,7 @@ Atomic tasks:
 - Phase 3 documented verified Hermes UI LaunchAgent deployment on Bob.
 - Phase 4 deployed and documented Cloudflare Tunnel and Access exposure.
 - Phase 4.5 improved read-only dashboard UX for daily operations.
+- Phase 5 discuss mapped service actions and Bob entry; restart kickstart live-verified; 5A plan ready.
 
 ## Phase 4.5 Verification
 
@@ -152,4 +176,4 @@ Atomic tasks:
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after Phase 4.5 dashboard UX cleanup*
+*Last updated: 2026-06-04 after Phase 5 discuss — verified service actions and Bob interaction planning*

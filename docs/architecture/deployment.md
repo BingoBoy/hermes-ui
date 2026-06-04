@@ -105,6 +105,43 @@ Hermes UI and the Hermes gateway are separate LaunchAgents:
 
 Hermes UI reads gateway status and verified gateway logs through allowlisted backend logic. It does not control the gateway in the current read-only phase.
 
+### Hermes Gateway LaunchAgent (verified metadata)
+
+| Field | Value |
+|-------|-------|
+| Label | `ai.hermes.gateway` |
+| Plist | `/Users/trulsdahl/Library/LaunchAgents/ai.hermes.gateway.plist` |
+| Domain path | `gui/$(id -u)/ai.hermes.gateway` |
+| Program | `/Users/trulsdahl/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main gateway run --replace` |
+| Stdout log | `/Users/trulsdahl/.hermes/logs/gateway.log` |
+| Stderr log | `/Users/trulsdahl/.hermes/logs/gateway.error.log` |
+
+### Planned service actions (Phase 5A — not yet in runtime)
+
+When `ALLOW_SERVICE_ACTIONS=true` on Bob:
+
+```bash
+# Restart (live verified 2026-06-04)
+launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway
+
+# Start (verify in maintenance window before 5B)
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist
+
+# Stop (verify in maintenance window before 5B)
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist
+
+# Detail status
+launchctl print gui/$(id -u)/ai.hermes.gateway
+```
+
+Rules:
+
+- Hermes UI backend runs these as fixed argv only — no shell, no client input.
+- Hermes UI LaunchAgent must not be restartable from the dashboard.
+- Do not use `hermes gateway restart --all` from the UI backend.
+
+See `docs/api/service-actions.md` for API and audit contract.
+
 ## Cloudflare Access and Tunnel
 
 Configured in Phase 4 on 2026-06-04.
@@ -142,4 +179,5 @@ See `docs/architecture/cloudflare.md` for full deployment details.
 - `README.md` — quick Bob operations and API smoke tests
 - `docs/security/README.md` — security boundaries and gates
 - `docs/architecture/logging.md` — verified Hermes gateway log allowlist
-- `docs/architecture/cloudflare.md` — Cloudflare Tunnel and Access plan
+- `docs/api/service-actions.md` — planned gateway write actions
+- `docs/api/bob-interaction.md` — planned Bob task entry

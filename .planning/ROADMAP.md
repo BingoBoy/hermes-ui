@@ -13,7 +13,7 @@
 | 3 | Document Bob LaunchAgent Deployment | Document verified Hermes UI LaunchAgent operations on Bob without changing runtime code | RUN-01, RUN-02, OPS-02 | no |
 | 4 | Cloudflare Access and Tunnel | Expose Hermes UI safely through Cloudflare Tunnel and Cloudflare Access | OPS-01, SEC-04 | yes |
 | 4.5 | Dashboard UX Cleanup | Improve read-only dashboard usability without changing backend security model | UI-01, UI-02, UI-03, UI-04 | yes |
-| 5 | Verified Service Actions | Add start, stop, and restart controls only after launchctl commands are verified and audit logging is planned | ACT-01, ACT-02, ACT-03, ACT-04 | yes |
+| 5 | Verified Service Actions and Bob Interaction | Plan and deliver safe gateway controls and bounded Bob task entry after command verification | ACT-01, ACT-02, ACT-03, ACT-04 | yes |
 | 6 | Operations Enrichment | Add richer operational views for launchctl, Docker, and adjacent services where relevant | OPS-02, OPS-03 | yes |
 
 ## Phase 1: Read-Only MVP Foundation
@@ -111,22 +111,45 @@
 4. Manual refresh is available.
 5. No write routes or backend security changes are introduced.
 
-## Phase 5: Verified Service Actions
+## Phase 5: Verified Service Actions and Bob Interaction
 
-**Goal:** Add start, stop, and restart controls only after launchctl commands are verified and audit logging is planned.
+**Goal:** Plan and deliver safe gateway service controls and a bounded Bob task entry point without browser terminal or arbitrary command execution.
 
-**Requirements:** ACT-01, ACT-02, ACT-03, ACT-04
+**Requirements:** ACT-01, ACT-02, ACT-03, ACT-04 (Track A); Bob task entry (Track B)
+
+**Status:** Discuss complete on 2026-06-04 — 5A execute ready
+
+**Sub-phases:**
+
+| ID | Name | Goal | Status |
+|----|------|------|--------|
+| 5A | Restart-only action | POST restart with audit, confirmation, feature gate | Planned — next execute |
+| 5B | Start/stop actions | bootstrap/bootout after live verification | Blocked |
+| 5C | Bob task entry | kanban create wrapper API | Blocked on 5A + kanban verify |
+| 5D | Response/history view | Read-only kanban list/show | Blocked on 5C |
 
 **Success criteria:**
-1. Exact launchctl commands are verified against the Bob plist and runtime.
-2. Write actions require explicit confirmation.
-3. Write actions are allowlisted, audited, and never user-defined.
-4. Failed write actions return safe structured errors.
+1. Exact launchctl restart command verified on Bob (`kickstart -k`).
+2. Write actions use fixed argv, no shell, no client command input.
+3. Write actions require explicit UI confirmation and append-only audit log.
+4. Bob task entry uses allowlisted Hermes CLI (kanban create), not free chat/terminal.
+5. Failed actions return safe structured JSON errors.
+
+**Verified commands (Bob, 2026-06-04):**
+- Restart: `launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway` — live verified
+- Start/stop: documented, require maintenance-window verification before 5B
 
 **Suggested plans:**
-- Verify launchctl commands.
-- Design confirmation and audit model.
-- Implement approved service actions.
+- 5A: Allowlisted runner + audit + POST restart + confirmation UX
+- 5B: Start/stop endpoints after bootstrap/bootout verification
+- 5C: POST `/api/bob/tasks` via `hermes kanban create`
+- 5D: Read-only task history endpoints
+
+**Planning artifacts:**
+- `.planning/phases/05-verified-service-actions/05-CONTEXT.md`
+- `.planning/phases/05-verified-service-actions/05-PLAN.md`
+- `docs/api/service-actions.md`
+- `docs/api/bob-interaction.md`
 
 ## Phase 6: Operations Enrichment
 

@@ -63,8 +63,33 @@ Before adding start, stop, or restart:
 2. Verify the LaunchAgent label and plist path.
 3. Add explicit confirmation UX.
 4. Add audit logging.
-5. Keep actions allowlisted and fixed.
-6. Re-run security verification.
+5. Keep actions allowlisted and fixed to Hermes Gateway (`ai.hermes.gateway`) only.
+6. Gate with `ALLOW_SERVICE_ACTIONS=false` by default.
+7. Re-run security verification.
+
+**Phase 5 discuss status (2026-06-04):**
+
+| Action | Command | Verified |
+|--------|---------|----------|
+| Restart | `launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway` | Yes — live on Bob |
+| Start | `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist` | Documented only |
+| Stop | `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/ai.hermes.gateway.plist` | Documented only |
+
+Implementation rules:
+
+- Use `subprocess.run` with fixed argv — never `shell=True`.
+- Never accept command strings, plist paths, or labels from the client.
+- Never control `no.truls.hermes-ui` from the web UI.
+- Audit log: `/Users/trulsdahl/.hermes-ui/logs/service-actions.log` (JSONL).
+- See `docs/api/service-actions.md` for API contract.
+
+## Gates Before Bob Task Entry (5C)
+
+1. Verify `hermes kanban create --json` contract on Bob.
+2. Define input length limits and idempotency behavior.
+3. Add `ALLOW_BOB_TASKS=false` feature gate.
+4. Audit interactions separately from service actions.
+5. See `docs/api/bob-interaction.md`.
 
 Before adding logs:
 
