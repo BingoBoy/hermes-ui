@@ -192,6 +192,16 @@
 
 **Artifacts:** `.planning/phases/06D-template-inputs/06D-CONTEXT.md`
 
+## Phase 6E: Task Result Actions
+
+**Goal:** Safe browser-only copy/expand for Bob Inbox and task detail results.
+
+**Status:** Complete locally 2026-06-04 — deploy + UAT pending
+
+**Scope:** Frontend-only in `backend/dashboard.py`; Clipboard API + expand; no write routes
+
+**Artifacts:** `.planning/phases/06E-task-result-actions/06E-CONTEXT.md`
+
 ## Phase 6: Operations Enrichment
 
 **Goal:** Add richer operational views for launchctl, Docker, and adjacent services where relevant.
