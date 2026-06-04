@@ -67,7 +67,22 @@ def test_dashboard_includes_bob_task_history_ui() -> None:
     assert "bob-history-section" in body
     assert "Bob-oppgaver" in body
     assert "bob-history-refresh" in body
-    assert "Read-only historikk" in body
+    assert "bob-auto-refresh-toggle" in body
+    assert "Auto-oppdater oppgaver" in body
+    assert "status-pill.completed" in body
+    assert "normalizeBobStatus" in body
+
+
+def test_dashboard_includes_bob_inbox_ui() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "bob-inbox-section" in body
+    assert "Bob Inbox" in body
+    assert "bob-inbox-list-wrap" in body
+    assert "Ingen ferdige Bob-resultater ennå" in body
+    assert "renderBobInbox" in body
 
 
 def test_dashboard_includes_bob_task_submission_ui() -> None:
