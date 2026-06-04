@@ -329,9 +329,76 @@ DASHBOARD_HTML = """\
       color: var(--muted);
     }
     .status-pill.running { background: #dbeafe; color: #1d4ed8; }
-    .status-pill.done { background: var(--ok-bg); color: var(--ok); }
     .status-pill.ready { background: var(--warn-bg); color: var(--warn); }
-    .status-pill.failed, .status-pill.blocked { background: var(--bad-bg); color: var(--bad); }
+    .status-pill.completed,
+    .status-pill.done { background: var(--ok-bg); color: var(--ok); }
+    .status-pill.failed,
+    .status-pill.blocked { background: var(--bad-bg); color: var(--bad); }
+    .status-pill.unknown { background: #eef2f7; color: var(--muted); }
+    .bob-toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .bob-auto-refresh {
+      font-size: 0.9rem;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .bob-row-highlight td { background: #eff6ff; }
+    .bob-result-flag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--ok);
+    }
+    .bob-result-block {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      max-height: 280px;
+      overflow: auto;
+    }
+    .bob-inbox-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .bob-inbox-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fafbfc;
+    }
+    .bob-inbox-item header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .bob-inbox-item h4 {
+      margin: 0;
+      font-size: 0.95rem;
+      flex: 1 1 160px;
+    }
+    .bob-inbox-excerpt {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin: 0 0 8px;
+      line-height: 1.45;
+    }
   </style>
 </head>
 <body>
@@ -434,26 +501,47 @@ DASHBOARD_HTML = """\
     </section>
 
     <section class="card bob-section" id="bob-history-section" aria-label="Bob-oppgaver">
-      <div class="toolbar" style="margin-bottom: 8px;">
-        <h2 style="margin: 0;">Bob-oppgaver</h2>
-        <button type="button" id="bob-history-refresh">Oppdater oppgaver</button>
-      </div>
+      <h2>Bob-oppgaver</h2>
       <p class="bob-intro">
-        Read-only historikk og status fra Hermes kanban — ikke chat eller terminal.
+        Read-only oppfølging av kanban-oppgaver — status, tidsstempler og resultat.
       </p>
       <div class="bob-disabled" id="bob-history-disabled" hidden>
         Oppgaveliste er deaktivert (<code>ALLOW_BOB_TASKS=false</code>).
       </div>
       <div id="bob-history-content" hidden>
+        <div class="bob-toolbar-row">
+          <button type="button" id="bob-history-refresh">Oppdater oppgaver</button>
+          <label class="bob-auto-refresh" for="bob-auto-refresh-toggle">
+            <input type="checkbox" id="bob-auto-refresh-toggle" />
+            Auto-oppdater oppgaver (12s)
+          </label>
+        </div>
         <p class="log-meta" id="bob-history-meta">Ingen data lastet ennå.</p>
         <div id="bob-history-list-wrap"></div>
         <div class="bob-detail-panel" id="bob-history-detail" hidden>
           <h3 id="bob-detail-title">Oppgavedetaljer</h3>
           <dl class="meta" id="bob-detail-meta"></dl>
+          <div id="bob-detail-result-wrap" hidden>
+            <p class="log-meta" style="margin: 10px 0 4px;">Resultat</p>
+            <pre class="bob-result-block" id="bob-detail-result"></pre>
+          </div>
           <details><summary>Teknisk JSON</summary><pre id="bob-detail-json"></pre></details>
         </div>
       </div>
       <div class="action-result" id="bob-history-result" aria-live="polite"></div>
+    </section>
+
+    <section class="card bob-section" id="bob-inbox-section" aria-label="Bob Inbox">
+      <h2>Bob Inbox</h2>
+      <p class="bob-intro">
+        Read-only innboks med ferdige oppgaver og resultater fra Bob (maks 8 nyeste).
+      </p>
+      <div class="bob-disabled" id="bob-inbox-disabled" hidden>
+        Bob Inbox er deaktivert (<code>ALLOW_BOB_TASKS=false</code>).
+      </div>
+      <div id="bob-inbox-content" hidden>
+        <div id="bob-inbox-list-wrap"></div>
+      </div>
     </section>
 
     <section class="notice" id="dashboard-notice">
@@ -535,6 +623,97 @@ DASHBOARD_HTML = """\
 
     let serviceActionsEnabled = false;
     let bobTasksEnabled = false;
+    let bobTasksCache = [];
+    let bobHighlightTaskId = null;
+    let bobHighlightTimer = null;
+    let bobAutoRefreshTimer = null;
+    let bobHistoryFailureCount = 0;
+    const BOB_AUTO_REFRESH_MS = 12000;
+    const BOB_INBOX_MAX_ITEMS = 8;
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text == null ? "" : String(text);
+      return div.innerHTML;
+    }
+
+    function normalizeBobStatus(status) {
+      const normalized = String(status || "").toLowerCase();
+      if (normalized === "done" || normalized === "completed") {
+        return "completed";
+      }
+      if (normalized === "ready") {
+        return "ready";
+      }
+      if (normalized === "running") {
+        return "running";
+      }
+      if (normalized === "failed" || normalized === "blocked") {
+        return "failed";
+      }
+      return "unknown";
+    }
+
+    function statusDisplayLabel(status) {
+      const normalized = normalizeBobStatus(status);
+      if (normalized === "completed") {
+        return "completed";
+      }
+      if (normalized === "unknown" && status) {
+        return String(status);
+      }
+      return normalized;
+    }
+
+    function taskSortTimestamp(task) {
+      return (
+        Number(task.completed_at) ||
+        Number(task.started_at) ||
+        Number(task.created_at) ||
+        0
+      );
+    }
+
+    function taskHasResult(task) {
+      const value = task == null ? null : task.result;
+      if (value === null || value === undefined) {
+        return false;
+      }
+      if (typeof value === "string") {
+        return value.trim().length > 0;
+      }
+      return true;
+    }
+
+    function formatResultValue(result) {
+      if (result === null || result === undefined) {
+        return null;
+      }
+      if (typeof result === "object") {
+        return JSON.stringify(result, null, 2);
+      }
+      return String(result);
+    }
+
+    function resultExcerpt(task) {
+      const formatted = formatResultValue(task.result);
+      if (!formatted) {
+        return "";
+      }
+      const oneLine = formatted.replace(/\\s+/g, " ").trim();
+      if (oneLine.length <= 120) {
+        return oneLine;
+      }
+      return oneLine.slice(0, 117) + "...";
+    }
+
+    function isInboxCandidate(task) {
+      const status = normalizeBobStatus(task.status);
+      if (status === "completed" || status === "failed") {
+        return true;
+      }
+      return taskHasResult(task);
+    }
 
     function setBobTaskResult(message, tone) {
       const target = document.getElementById("bob-task-result");
@@ -548,18 +727,56 @@ DASHBOARD_HTML = """\
       target.className = "action-result";
     }
 
+    function stopBobAutoRefresh() {
+      if (bobAutoRefreshTimer) {
+        clearInterval(bobAutoRefreshTimer);
+        bobAutoRefreshTimer = null;
+      }
+    }
+
+    function startBobAutoRefresh() {
+      stopBobAutoRefresh();
+      const toggle = document.getElementById("bob-auto-refresh-toggle");
+      if (!bobTasksEnabled || !toggle || !toggle.checked) {
+        return;
+      }
+      bobAutoRefreshTimer = setInterval(() => {
+        loadBobHistory({ silent: true });
+      }, BOB_AUTO_REFRESH_MS);
+    }
+
+    function scheduleBobHighlight(taskId) {
+      bobHighlightTaskId = taskId;
+      if (bobHighlightTimer) {
+        clearTimeout(bobHighlightTimer);
+      }
+      bobHighlightTimer = setTimeout(() => {
+        bobHighlightTaskId = null;
+        renderBobHistoryList(bobTasksCache);
+      }, 8000);
+    }
+
     function updateBobTasksUi(enabled) {
       bobTasksEnabled = !!enabled;
       const form = document.getElementById("bob-task-form");
       const disabled = document.getElementById("bob-task-disabled");
       const historyContent = document.getElementById("bob-history-content");
       const historyDisabled = document.getElementById("bob-history-disabled");
+      const inboxContent = document.getElementById("bob-inbox-content");
+      const inboxDisabled = document.getElementById("bob-inbox-disabled");
       form.hidden = !bobTasksEnabled;
       disabled.hidden = bobTasksEnabled;
       historyContent.hidden = !bobTasksEnabled;
       historyDisabled.hidden = bobTasksEnabled;
+      inboxContent.hidden = !bobTasksEnabled;
+      inboxDisabled.hidden = bobTasksEnabled;
       if (bobTasksEnabled) {
         loadBobHistory();
+        startBobAutoRefresh();
+      } else {
+        stopBobAutoRefresh();
+        bobTasksCache = [];
+        renderBobInbox([]);
       }
     }
 
@@ -576,11 +793,7 @@ DASHBOARD_HTML = """\
     }
 
     function statusPillClass(status) {
-      const normalized = String(status || "").toLowerCase();
-      if (["done", "ready", "running", "failed", "blocked"].includes(normalized)) {
-        return normalized;
-      }
-      return "";
+      return normalizeBobStatus(status);
     }
 
     function setBobHistoryResult(message, tone) {
@@ -601,13 +814,14 @@ DASHBOARD_HTML = """\
       if (!tasks.length) {
         const empty = document.createElement("p");
         empty.className = "bob-history-empty";
-        empty.textContent = "Ingen oppgaver på tavlen.";
+        empty.textContent =
+          "Ingen oppgaver ennå. Send en oppgave til Bob for å starte.";
         wrap.appendChild(empty);
         return;
       }
-      const sorted = [...tasks].sort((a, b) => {
-        return (Number(b.created_at) || 0) - (Number(a.created_at) || 0);
-      });
+      const sorted = [...tasks].sort(
+        (a, b) => taskSortTimestamp(b) - taskSortTimestamp(a)
+      );
       const table = document.createElement("table");
       table.className = "bob-history-table";
       table.innerHTML = `
@@ -617,6 +831,9 @@ DASHBOARD_HTML = """\
             <th>Tittel</th>
             <th>Status</th>
             <th>Opprettet</th>
+            <th>Startet</th>
+            <th>Fullført</th>
+            <th>Resultat</th>
             <th></th>
           </tr>
         </thead>
@@ -625,14 +842,21 @@ DASHBOARD_HTML = """\
       const body = table.querySelector("tbody");
       for (const task of sorted) {
         const row = document.createElement("tr");
-        const status = task.status || "—";
-        row.innerHTML = `
-          <td><code>${task.id || "—"}</code></td>
-          <td>${task.title || "—"}</td>
-          <td><span class="status-pill ${statusPillClass(status)}">${status}</span></td>
-          <td>${formatUnixTime(task.created_at)}</td>
-          <td></td>
-        `;
+        if (bobHighlightTaskId && task.id === bobHighlightTaskId) {
+          row.className = "bob-row-highlight";
+        }
+        const statusLabel = statusDisplayLabel(task.status);
+        const cells = [
+          `<td><code>${escapeHtml(task.id || "—")}</code></td>`,
+          `<td>${escapeHtml(task.title || "—")}</td>`,
+          `<td><span class="status-pill ${statusPillClass(task.status)}">${escapeHtml(statusLabel)}</span></td>`,
+          `<td>${escapeHtml(formatUnixTime(task.created_at))}</td>`,
+          `<td>${escapeHtml(formatUnixTime(task.started_at))}</td>`,
+          `<td>${escapeHtml(formatUnixTime(task.completed_at))}</td>`,
+          `<td>${taskHasResult(task) ? '<span class="bob-result-flag">Har resultat</span>' : "—"}</td>`,
+          "<td></td>",
+        ];
+        row.innerHTML = cells.join("");
         const actionCell = row.lastElementChild;
         const btn = document.createElement("button");
         btn.type = "button";
@@ -645,6 +869,56 @@ DASHBOARD_HTML = """\
       wrap.appendChild(table);
     }
 
+    function renderBobInbox(tasks) {
+      const wrap = document.getElementById("bob-inbox-list-wrap");
+      wrap.innerHTML = "";
+      const candidates = [...tasks]
+        .filter(isInboxCandidate)
+        .sort((a, b) => taskSortTimestamp(b) - taskSortTimestamp(a))
+        .slice(0, BOB_INBOX_MAX_ITEMS);
+
+      if (!candidates.length) {
+        const empty = document.createElement("p");
+        empty.className = "bob-history-empty";
+        empty.textContent = "Ingen ferdige Bob-resultater ennå.";
+        wrap.appendChild(empty);
+        return;
+      }
+
+      const list = document.createElement("div");
+      list.className = "bob-inbox-list";
+      for (const task of candidates) {
+        const card = document.createElement("article");
+        card.className = "bob-inbox-item";
+        const statusLabel = statusDisplayLabel(task.status);
+        const excerpt = resultExcerpt(task);
+        card.innerHTML = `
+          <header>
+            <h4>${escapeHtml(task.title || task.id || "Uten tittel")}</h4>
+            <span class="status-pill ${statusPillClass(task.status)}">${escapeHtml(statusLabel)}</span>
+          </header>
+          <p class="log-meta"><code>${escapeHtml(task.id || "—")}</code></p>
+        `;
+        if (excerpt) {
+          const excerptEl = document.createElement("p");
+          excerptEl.className = "bob-inbox-excerpt";
+          excerptEl.textContent = excerpt;
+          card.appendChild(excerptEl);
+        }
+        const actions = document.createElement("div");
+        actions.className = "action-row";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "linkish";
+        btn.textContent = "Vis detaljer";
+        btn.addEventListener("click", () => loadBobTaskDetail(task.id));
+        actions.appendChild(btn);
+        card.appendChild(actions);
+        list.appendChild(card);
+      }
+      wrap.appendChild(list);
+    }
+
     function renderBobTaskDetail(payload) {
       const panel = document.getElementById("bob-history-detail");
       const task = payload.task || {};
@@ -653,11 +927,10 @@ DASHBOARD_HTML = """\
         task.title || payload.task_id || "Oppgavedetaljer";
       const rows = [
         ["Task ID", payload.task_id || task.id],
-        ["Status", task.status],
+        ["Status", statusDisplayLabel(task.status)],
         ["Opprettet", formatUnixTime(task.created_at)],
         ["Startet", formatUnixTime(task.started_at)],
         ["Fullført", formatUnixTime(task.completed_at)],
-        ["Resultat", task.result || "—"],
       ];
       if (task.body) {
         rows.push(["Beskrivelse", task.body]);
@@ -665,6 +938,17 @@ DASHBOARD_HTML = """\
       rows.push(["Hendelser", String((payload.events || []).length)]);
       rows.push(["Kommentarer", String((payload.comments || []).length)]);
       setMeta("bob-detail-meta", rows);
+
+      const resultWrap = document.getElementById("bob-detail-result-wrap");
+      const resultBlock = document.getElementById("bob-detail-result");
+      const formattedResult = formatResultValue(task.result);
+      if (formattedResult) {
+        resultWrap.hidden = false;
+        resultBlock.textContent = formattedResult;
+      } else {
+        resultWrap.hidden = true;
+        resultBlock.textContent = "";
+      }
       setJson("bob-detail-json", payload);
     }
 
@@ -682,27 +966,51 @@ DASHBOARD_HTML = """\
       document.getElementById("bob-history-detail").scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
-    async function loadBobHistory() {
+    async function loadBobHistory(options) {
       if (!bobTasksEnabled) {
         return;
       }
+      const silent = options && options.silent;
       const meta = document.getElementById("bob-history-meta");
       const refreshBtn = document.getElementById("bob-history-refresh");
-      refreshBtn.disabled = true;
-      clearBobHistoryResult();
-      meta.textContent = "Henter oppgaver...";
+      if (!silent) {
+        refreshBtn.disabled = true;
+        clearBobHistoryResult();
+        meta.textContent = "Henter oppgaver...";
+      }
 
-      const result = await fetchJson("/api/bob/tasks?limit=20");
-      refreshBtn.disabled = false;
+      const result = await fetchJson("/api/bob/tasks?limit=50");
+      if (!silent) {
+        refreshBtn.disabled = false;
+      }
       if (!result.ok) {
+        bobHistoryFailureCount += 1;
+        if (bobHistoryFailureCount >= 3) {
+          stopBobAutoRefresh();
+          const toggle = document.getElementById("bob-auto-refresh-toggle");
+          if (toggle) {
+            toggle.checked = false;
+          }
+        }
         meta.textContent = "Kunne ikke hente oppgaver";
-        setBobHistoryResult(result.error || "Liste feilet", "bad");
+        if (!silent) {
+          setBobHistoryResult(
+            result.error || "Kunne ikke hente oppgaver fra Bob. Prøv igjen senere.",
+            "bad"
+          );
+        }
         return;
       }
 
+      bobHistoryFailureCount = 0;
       const data = result.data;
-      meta.textContent = `${data.count} oppgaver · sist sjekket ${formatUnixTime(data.checked_at)}`;
-      renderBobHistoryList(data.tasks || []);
+      bobTasksCache = data.tasks || [];
+      meta.textContent = `${data.count} oppgaver vist (maks 50) · sist sjekket ${formatUnixTime(data.checked_at)}`;
+      renderBobHistoryList(bobTasksCache);
+      renderBobInbox(bobTasksCache);
+      if (!silent) {
+        clearBobHistoryResult();
+      }
     }
 
     async function submitBobTask(event) {
@@ -739,7 +1047,11 @@ DASHBOARD_HTML = """\
       titleInput.value = "";
       bodyInput.value = "";
       submitBtn.disabled = false;
+      scheduleBobHighlight(data.task_id);
       await loadBobHistory();
+      if (data.task_id) {
+        await loadBobTaskDetail(data.task_id);
+      }
     }
 
     function setActionResult(message, tone) {
@@ -961,7 +1273,12 @@ DASHBOARD_HTML = """\
       }
     });
     document.getElementById("bob-task-form").addEventListener("submit", submitBobTask);
-    document.getElementById("bob-history-refresh").addEventListener("click", loadBobHistory);
+    document.getElementById("bob-history-refresh").addEventListener("click", () => {
+      loadBobHistory();
+    });
+    document.getElementById("bob-auto-refresh-toggle").addEventListener("change", () => {
+      startBobAutoRefresh();
+    });
     loadDashboard();
   </script>
 </body>
