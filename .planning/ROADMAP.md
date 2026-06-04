@@ -196,7 +196,7 @@
 
 **Goal:** Safe browser-only copy/expand for Bob Inbox and task detail results.
 
-**Status:** Complete locally 2026-06-04 — deploy + UAT pending
+**Status:** Deployed 2026-06-04 — **UAT `human_needed`** (inbox empty until Bob produces task results)
 
 **Scope:** Frontend-only in `backend/dashboard.py`; Clipboard API + expand; no write routes
 

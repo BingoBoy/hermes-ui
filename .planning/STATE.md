@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 6E Task Result Actions — **complete** (local verify 2026-06-04). Next: deploy + external UAT, then Phase 6 Operations Enrichment or backlog.
+**Current focus:** Phase 6E Task Result Actions — **implemented & deployed**; external UAT **`human_needed`** until Bob Inbox has ≥1 result. Next: wait for/completed Bob task → finish 6E UAT.
 
-**Last activity:** 2026-06-04 — `/gsd-ship 6D` → PR #1 created; work on `main` at `3411d83`.
+**Last activity:** 2026-06-04 — 6E partial UAT on strategistudio.no (templates/send OK; inbox empty, tasks `ready`).
 
 ## Workflow
 
