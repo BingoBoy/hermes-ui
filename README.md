@@ -179,7 +179,7 @@ ALLOW_BOB_TASKS=true
 HERMES_CLI_BIN=/Users/trulsdahl/.hermes/hermes-agent/venv/bin/hermes
 ```
 
-Restart Hermes UI LaunchAgent. Dashboard viser **Bob task-maler** (ett-klikk maler), **Send oppgave til Bob**, **Bob-oppgaver** (med valgfri auto-oppdatering) og **Bob Inbox** når gaten er på.
+Restart Hermes UI LaunchAgent. Dashboard viser **Bob task-maler** (valgfrie felt per mal + «Send mal til Bob»), **Send oppgave til Bob**, **Bob-oppgaver** (med valgfri auto-oppdatering) og **Bob Inbox** når gaten er på.
 
 Audit-logg:
 

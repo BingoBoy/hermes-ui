@@ -106,9 +106,18 @@ def test_dashboard_includes_bob_task_templates_ui() -> None:
     assert "BOB_TASK_TEMPLATES" in body
     assert "submitBobTaskPayload" in body
     assert "sendBobTaskTemplate" in body
+    assert "buildBobTaskTemplatePayload" in body
     assert "Morgenbrief" in body
     assert "Markedsføringsstatus" in body
     assert 'data-template-id="morgenbrief"' in body
+    assert "Send mal til Bob" in body
+    assert "bob-template-input-morgenbrief" in body
+    assert "Fokus for dagen" in body
+    assert "URL som skal analyseres" in body
+    assert "Konkurrent eller tema" in body
+    assert "Periode" in body
+    assert "Fokusområde" in body
+    assert "Oppgave sendt til Bob" in body
 
 
 def test_dashboard_includes_restart_confirmation_ui() -> None:
