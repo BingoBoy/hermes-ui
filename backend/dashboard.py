@@ -54,6 +54,16 @@ DASHBOARD_HTML = """\
       cursor: pointer;
     }
     button:hover { background: #eef2f7; }
+    button.danger {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    button.danger:hover { background: #fee2e2; }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
     .updated { color: var(--muted); font-size: 0.9rem; }
     .grid {
       display: grid;
@@ -164,6 +174,62 @@ DASHBOARD_HTML = """\
       font-size: 0.92rem;
     }
     .error-text { color: var(--bad); font-size: 0.9rem; }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+      align-items: center;
+    }
+    .action-result {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      border-radius: 10px;
+      display: none;
+    }
+    .action-result.ok {
+      display: block;
+      background: var(--ok-bg);
+      color: var(--ok);
+    }
+    .action-result.bad {
+      display: block;
+      background: var(--bad-bg);
+      color: var(--bad);
+    }
+    .action-result.warn {
+      display: block;
+      background: var(--warn-bg);
+      color: var(--warn);
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 20;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      width: min(100%, 420px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+    }
+    .modal h3 { margin: 0 0 8px; }
+    .modal p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 <body>
@@ -195,6 +261,10 @@ DASHBOARD_HTML = """\
           <span class="badge warn" id="hermes-badge">Laster</span>
         </div>
         <dl class="meta" id="hermes-meta"></dl>
+        <div class="action-row" id="hermes-actions" hidden>
+          <button type="button" class="danger" id="restart-btn">Restart Gateway</button>
+        </div>
+        <div class="action-result" id="hermes-action-result" aria-live="polite"></div>
         <details><summary>Teknisk JSON</summary><pre id="hermes-json">Loading...</pre></details>
       </article>
 
@@ -235,11 +305,25 @@ DASHBOARD_HTML = """\
       </div>
     </section>
 
-    <section class="notice">
-      Read-only MVP. Start, stopp, restart og terminal er ikke tilgjengelig.
+    <section class="notice" id="dashboard-notice">
+      Read-only kontrollpanel. Restart er tilgjengelig bare når service actions er aktivert på serveren.
       Oppdater siden manuelt eller bruk knappen over for å hente ny status.
     </section>
   </main>
+
+  <div class="modal-backdrop" id="restart-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="restart-modal-title">
+      <h3 id="restart-modal-title">Restart Hermes Gateway?</h3>
+      <p>
+        Dette restarter LaunchAgent <strong>ai.hermes.gateway</strong>.
+        Gateway-messaging kan avbrytes kort. Handlingen logges i audit-loggen.
+      </p>
+      <div class="modal-actions">
+        <button type="button" id="restart-cancel-btn">Avbryt</button>
+        <button type="button" class="danger" id="restart-confirm-btn">Bekreft restart</button>
+      </div>
+    </div>
+  </div>
   <script>
     function setBadge(id, label, tone) {
       const badge = document.getElementById(id);
@@ -284,17 +368,79 @@ DASHBOARD_HTML = """\
       }
     }
 
-    async function fetchJson(path) {
-      const response = await fetch(path);
+    async function fetchJson(path, options) {
+      const response = await fetch(path, options);
       if (!response.ok) {
         let detail = response.statusText;
+        let body = null;
         try {
-          const body = await response.json();
-          detail = body.detail?.details || body.detail?.error || JSON.stringify(body.detail || body);
+          body = await response.json();
+          detail = body.detail?.detail || body.detail?.error || JSON.stringify(body.detail || body);
         } catch (_) {}
-        return { ok: false, error: detail, status: response.status };
+        return { ok: false, error: detail, status: response.status, body };
       }
-      return { ok: true, data: await response.json() };
+      return { ok: true, data: await response.json(), status: response.status };
+    }
+
+    let serviceActionsEnabled = false;
+
+    function setActionResult(message, tone) {
+      const target = document.getElementById("hermes-action-result");
+      target.textContent = message;
+      target.className = "action-result " + tone;
+    }
+
+    function clearActionResult() {
+      const target = document.getElementById("hermes-action-result");
+      target.textContent = "";
+      target.className = "action-result";
+    }
+
+    function updateServiceActionsUi(enabled) {
+      serviceActionsEnabled = !!enabled;
+      const actions = document.getElementById("hermes-actions");
+      const notice = document.getElementById("dashboard-notice");
+      actions.hidden = !serviceActionsEnabled;
+      notice.textContent = serviceActionsEnabled
+        ? "Service actions er aktivert for Hermes Gateway. Restart krever eksplisitt bekreftelse og logges."
+        : "Read-only kontrollpanel. Restart er tilgjengelig bare når ALLOW_SERVICE_ACTIONS=true på serveren.";
+    }
+
+    function openRestartModal() {
+      const modal = document.getElementById("restart-modal");
+      modal.hidden = false;
+      modal.classList.add("open");
+    }
+
+    function closeRestartModal() {
+      const modal = document.getElementById("restart-modal");
+      modal.classList.remove("open");
+      modal.hidden = true;
+    }
+
+    async function confirmRestart() {
+      const confirmBtn = document.getElementById("restart-confirm-btn");
+      confirmBtn.disabled = true;
+      clearActionResult();
+      closeRestartModal();
+
+      const result = await fetchJson("/api/hermes/restart", { method: "POST" });
+      if (!result.ok) {
+        const message = result.error || "Restart feilet";
+        setActionResult(message, "bad");
+        confirmBtn.disabled = false;
+        return;
+      }
+
+      const data = result.data;
+      if (data.warning) {
+        setActionResult(`${data.message}. ${data.warning}`, "warn");
+      } else {
+        setActionResult(data.message || "Restart fullført", data.success ? "ok" : "bad");
+      }
+
+      await loadDashboard();
+      confirmBtn.disabled = false;
     }
 
     function renderService(payload) {
@@ -312,9 +458,11 @@ DASHBOARD_HTML = """\
         ["Host", data.host],
         ["Bind", `${data.bind_host}:${data.bind_port}`],
         ["Read-only", data.read_only ? "Ja" : "Nei"],
+        ["Service actions", data.allow_service_actions ? "Aktivert" : "Deaktivert"],
         ["Sjekket", data.checked_at],
       ]);
       setJson("service-json", data);
+      updateServiceActionsUi(data.allow_service_actions);
     }
 
     function renderHermes(payload) {
@@ -425,6 +573,14 @@ DASHBOARD_HTML = """\
     }
 
     document.getElementById("refresh-btn").addEventListener("click", loadDashboard);
+    document.getElementById("restart-btn").addEventListener("click", openRestartModal);
+    document.getElementById("restart-cancel-btn").addEventListener("click", closeRestartModal);
+    document.getElementById("restart-confirm-btn").addEventListener("click", confirmRestart);
+    document.getElementById("restart-modal").addEventListener("click", (event) => {
+      if (event.target.id === "restart-modal") {
+        closeRestartModal();
+      }
+    });
     loadDashboard();
   </script>
 </body>

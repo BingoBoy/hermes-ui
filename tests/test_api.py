@@ -55,6 +55,16 @@ def test_dashboard_returns_read_only_status_ui() -> None:
     assert "log-view" in body
 
 
+def test_dashboard_includes_restart_confirmation_ui() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "restart-btn" in body
+    assert "restart-modal" in body
+    assert "Bekreft restart" in body
+
+
 def test_only_allowlisted_write_route_exists() -> None:
     forbidden_paths = {
         "/api/hermes/start",
