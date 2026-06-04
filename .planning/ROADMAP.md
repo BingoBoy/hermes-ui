@@ -182,7 +182,7 @@
 
 **Goal:** Optional input fields on Bob task templates; values merge into task `body` before existing `POST /api/bob/tasks`.
 
-**Status:** Complete — verified 2026-06-04 (local tests + Bob deploy)
+**Status:** Complete — verified 2026-06-04 (automated + Bob deploy + user UAT on strategistudio.no)
 
 **Scope:**
 
