@@ -110,6 +110,8 @@ Implementation rules:
 
 **Task templates (6C):** «Bob task-maler» send only allowlisted `title` + `body` via existing `POST /api/bob/tasks`. Prompts are hardcoded in `backend/dashboard.py` — no server template registry, no client CLI flags, no new write routes.
 
+**Template inputs (6D):** Optional dashboard fields only alter the composed task `body` string client-side before the same `POST /api/bob/tasks`. Inputs cannot set CLI flags, shell commands, routes, or server actions — plain text merged into kanban task description only.
+
 Before adding logs:
 
 1. Verify actual log paths.

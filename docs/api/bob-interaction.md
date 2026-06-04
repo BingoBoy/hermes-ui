@@ -204,13 +204,24 @@ Sections on the dashboard (when `ALLOW_BOB_TASKS=true`):
 - Copy: creates an **async kanban task**, not live chat
 - On success: show `task_id` and `audit_id`
 
-### Bob task-maler (6C)
+### Bob task-maler (6C + 6D)
 
-- One-click buttons above the manual form (frontend-only, hardcoded prompts)
-- Same `POST /api/bob/tasks` with predefined `title` + `body` — no extra API fields or CLI flags
+- Compact template rows above the manual form (frontend-only, hardcoded prompts)
+- Optional text fields per template (6D) — values are merged into the task `body` in the browser only
+- «Send mal til Bob» calls the same `POST /api/bob/tasks` with composed `title` + `body` — no extra API fields or CLI flags
 - Templates: Morgenbrief, Ukesrapport, Konkurrentanalyse, Nettsideanalyse, Markedsføringsstatus
 - Hidden when `ALLOW_BOB_TASKS=false`
-- No terminal, chat, or user-defined templates
+- No terminal, chat, shell, or user-defined templates
+
+**Template inputs (6D):**
+
+| Mal | Felt | Effekt på `body` |
+|-----|------|------------------|
+| Morgenbrief | Fokus for dagen (valgfritt) | Appends `Dagens fokus: …` when set |
+| Ukesrapport | Periode (valgfritt) | Defaults to «denne uken» in prompt when empty |
+| Konkurrentanalyse | Konkurrent eller tema (valgfritt) | Appends focus line when set |
+| Nettsideanalyse | URL (valgfritt) | Appends URL line when set; empty keeps ask-for-URL instruction |
+| Markedsføringsstatus | Fokusområde (valgfritt) | Appends focus area when set |
 
 ### Bob-oppgaver (5D + 6A)
 
@@ -247,7 +258,8 @@ Confirm JSON shape matches this document and dispatcher processes `ready` tasks.
 | 5C | POST `/api/bob/tasks` via kanban create |
 | 5D | GET task list/detail via kanban list/show | **Implemented** |
 | 6A–6B | Dashboard follow-up + Bob Inbox | **Implemented** (UI only) |
-| 6C | Bob task-maler (one-click templates) | **Implemented** (UI only) |
+| 6C | Bob task-maler (templates) | **Implemented** (UI only) |
+| 6D | Template inputs (optional fields → task text) | **Implemented** (UI only) |
 
 ## Related Documents
 
