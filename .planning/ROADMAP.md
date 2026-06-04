@@ -12,6 +12,7 @@
 | 2 | Verified Logs Viewer | Add bounded Hermes log display only after actual log paths and redaction rules are verified | LOGS-01, LOGS-02, LOGS-03 | yes |
 | 3 | Document Bob LaunchAgent Deployment | Document verified Hermes UI LaunchAgent operations on Bob without changing runtime code | RUN-01, RUN-02, OPS-02 | no |
 | 4 | Cloudflare Access and Tunnel | Expose Hermes UI safely through Cloudflare Tunnel and Cloudflare Access | OPS-01, SEC-04 | yes |
+| 4.5 | Dashboard UX Cleanup | Improve read-only dashboard usability without changing backend security model | UI-01, UI-02, UI-03, UI-04 | yes |
 | 5 | Verified Service Actions | Add start, stop, and restart controls only after launchctl commands are verified and audit logging is planned | ACT-01, ACT-02, ACT-03, ACT-04 | yes |
 | 6 | Operations Enrichment | Add richer operational views for launchctl, Docker, and adjacent services where relevant | OPS-02, OPS-03 | yes |
 
@@ -94,6 +95,21 @@
 - Route: Published application route to `http://127.0.0.1:8787`
 - Access: self-hosted application with `Only Truls` policy
 - Unauthenticated curl verified with HTTP `302` redirect
+
+## Phase 4.5: Dashboard UX Cleanup
+
+**Goal:** Improve the read-only dashboard for daily use without changing backend security boundaries.
+
+**Requirements:** UI-01, UI-02, UI-03, UI-04
+
+**Status:** Complete on 2026-06-04
+
+**Success criteria:**
+1. Status cards show readable labels instead of raw JSON.
+2. Gateway logs render as scrollable readable lists.
+3. Technical JSON remains available in collapsible sections.
+4. Manual refresh is available.
+5. No write routes or backend security changes are introduced.
 
 ## Phase 5: Verified Service Actions
 

@@ -42,6 +42,17 @@ def test_api_hermes_status_fails_safely() -> None:
     assert "process" in payload
 
 
+def test_dashboard_returns_read_only_status_ui() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "Oppdater" in body
+    assert "service-badge" in body
+    assert "Teknisk JSON" in body
+    assert "log-view" in body
+
+
 def test_no_write_action_routes_exist() -> None:
     forbidden_terms = {"start", "stop", "restart", "terminal", "shell", "command"}
     routes = [

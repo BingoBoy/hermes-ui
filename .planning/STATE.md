@@ -20,11 +20,11 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 4 |
-| Name | Cloudflare Access and Tunnel |
+| Phase | 4.5 |
+| Name | Dashboard UX Cleanup |
 | Status | Complete |
-| Requirements | OPS-01, SEC-04 |
-| Current command | `/gsd-execute-phase 4` completed as docs verification |
+| Requirements | UI-01, UI-02, UI-03, UI-04 |
+| Current command | `/gsd-discuss-phase 4.5` completed with dashboard UX implementation |
 | Next command | `/gsd-discuss-phase 5` for verified service actions |
 
 ## Session Plan
@@ -48,8 +48,9 @@ Atomic tasks:
 - Hermes UI exposed at `https://hermes-ui.strategistudio.no`
 - Unauthenticated curl to `/api/status` returns HTTP `302` to Cloudflare Access login
 - Backend on Bob remains bound to `127.0.0.1:8787`
-- `.venv/bin/python -m pytest` passed: 10 tests
-- No backend code changed in Phase 4 documentation commit
+- Dashboard UX improved with status badges, scrollable logs, and manual refresh
+- `.venv/bin/python -m pytest` passed: 11 tests
+- No write routes added
 - No secrets committed to git
 
 ## Phase 2 Log Source Findings
@@ -101,6 +102,16 @@ Atomic tasks:
 - Tunnel model: token-based / Cloudflare-managed
 - Unauthenticated curl: HTTP `302` redirect to Cloudflare Access login
 
+## Phase 4.5 Dashboard UX
+
+**Completed on:** 2026-06-04
+
+- Status cards use readable labels: Online/Offline, Running/Not running, Available/Unavailable
+- Gateway logs render as scrollable readable lists
+- Technical JSON preserved in collapsible sections
+- Manual refresh button added
+- Read-only API routes unchanged
+
 ## Open Gates
 
 - Verify actual Hermes launchctl commands before implementing start, stop, or restart in UI.
@@ -120,6 +131,16 @@ Atomic tasks:
 - Phase 2 implemented bounded read-only logs API for `gateway_stdout` and `gateway_stderr`.
 - Phase 3 documented verified Hermes UI LaunchAgent deployment on Bob.
 - Phase 4 deployed and documented Cloudflare Tunnel and Access exposure.
+- Phase 4.5 improved read-only dashboard UX for daily operations.
+
+## Phase 4.5 Verification
+
+**Verified:** 2026-06-04
+
+- Dashboard test confirms status badges, refresh button, and log panels in HTML response.
+- Existing API and logs tests still pass.
+- Unauthenticated external curl still returns HTTP `302` to Cloudflare Access login.
+- No write-action routes added.
 
 ## Phase 4 Verification
 
@@ -128,7 +149,7 @@ Atomic tasks:
 - Docs-only change in repo: no backend or test code modified.
 - External curl check returned HTTP `302` to Cloudflare Access login for unauthenticated `/api/status`.
 - Secret scan found no committed `.env`, credentials, or token material added by this phase.
-- `.venv/bin/python -m pytest` passed: 10 tests.
+- `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after Phase 4 Cloudflare deployment documentation*
+*Last updated: 2026-06-04 after Phase 4.5 dashboard UX cleanup*
