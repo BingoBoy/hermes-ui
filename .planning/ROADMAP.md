@@ -4,6 +4,11 @@
 **Granularity:** Standard
 **Flow:** discuss -> plan -> execute -> verify
 
+## Milestones
+
+- **v2.1-bob-ux** — Bob Dashboard / Kanban UX (Phases 6A–6N) — shipped 2026-06-04 → [archive](milestones/v2.1-bob-ux-ROADMAP.md)
+- **Next (roadmap):** Phase 6 Operations Enrichment — not started
+
 ## Overview
 
 | Phase | Name | Goal | Requirements | UI hint |
@@ -153,142 +158,26 @@
 - `docs/api/service-actions.md`
 - `docs/api/bob-interaction.md`
 
-## Phase 6A–6B: Task Follow-up and Bob Inbox
+<details>
+<summary>✅ v2.1-bob-ux — Bob Dashboard / Kanban UX (Phases 6A–6N) — SHIPPED 2026-06-04</summary>
 
-**Goal:** Improve dashboard UX for Bob task follow-up and a read-only Bob Inbox.
+Full phase details: [milestones/v2.1-bob-ux-ROADMAP.md](milestones/v2.1-bob-ux-ROADMAP.md)
 
-**Status:** Complete — dashboard-only, no new API routes
+- [x] 6A–6B: Task follow-up + Bob Inbox
+- [x] 6C–6D: Task templates + optional inputs
+- [x] 6E–6I: Result actions + assignee + summary + UAT closure
+- [x] 6J–6M: Layout, expand UAT, artifacts, queue hygiene
+- [x] 6N: Milestone documentation cleanup
 
-**Delivered:**
+Production-verified on Bob. Audit: [milestones/v2.1-bob-ux-MILESTONE-AUDIT.md](milestones/v2.1-bob-ux-MILESTONE-AUDIT.md)
 
-- Bob-oppgaver: status badges, timestamps, auto-refresh, result panel
-- Bob Inbox: curated completed/failed/result tasks (client-side)
-
-## Phase 6C: Task Templates
-
-**Goal:** One-click predefined Bob task templates via existing `POST /api/bob/tasks`.
-
-**Status:** Complete — verified 2026-06-04 (automated + user UAT on strategistudio.no)
-
-**Scope:**
-
-- Frontend-only in `backend/dashboard.py`
-- Five hardcoded templates (morgenbrief, ukesrapport, konkurrentanalyse, nettside, markedsføring)
-- No new backend routes or CLI changes
-
-**Artifacts:** `.planning/phases/06C-task-templates/06C-CONTEXT.md`
-
-## Phase 6D: Template Inputs
-
-**Goal:** Optional input fields on Bob task templates; values merge into task `body` before existing `POST /api/bob/tasks`.
-
-**Status:** Complete — verified 2026-06-04 (automated + Bob deploy + user UAT on strategistudio.no)
-
-**Scope:**
-
-- Frontend-only in `backend/dashboard.py`
-- Per-template optional fields + «Send mal til Bob»
-- No new backend routes
-
-**Artifacts:** `.planning/phases/06D-template-inputs/06D-CONTEXT.md`
-
-## Phase 6E: Task Result Actions
-
-**Goal:** Safe browser-only copy/expand for Bob Inbox and task detail results.
-
-**Status:** Complete — verified 2026-06-04 (automated); UAT closed via Phase 6I (`t_7b978d4f`)
-
-**Scope:** Frontend-only in `backend/dashboard.py`; Clipboard API + expand; no write routes
-
-**Artifacts:** `.planning/phases/06E-task-result-actions/06E-CONTEXT.md`
-
-## Phase 6F: Bob Kanban Execution Fix
-
-**Goal:** Server-controlled `HERMES_BOB_TASK_ASSIGNEE` so UI-created tasks spawn with `assignee=default`.
-
-**Status:** Complete — Hermes UI verified on Bob; worker `hermes-assignee` gap is external ops debt
-
-**Artifacts:** `.planning/phases/06F-bob-kanban-execution-fix/`
-
-## Phase 6G: Bob Result Summary Fallback
-
-**Goal:** Show `latest_summary` when kanban `result` is null.
-
-**Status:** Complete — verified on Bob (`t_7b978d4f`)
-
-**Artifacts:** `.planning/phases/06G-bob-result-summary-fallback/`
-
-## Phase 6H: Bob Inbox Summary Enrichment
-
-**Goal:** Richer inbox cards using list enrichment fields.
-
-**Status:** Complete — verified 2026-06-04
-
-**Artifacts:** `.planning/phases/06H-bob-inbox-summary-enrichment/`
-
-## Phase 6I: Bob Inbox UAT Closure
-
-**Goal:** Close 6E human UAT with real Bob Inbox results after 6F–6H.
-
-**Status:** Complete — UAT via SSH tunnel; inbox + detail PASS for `t_7b978d4f`
-
-**Artifacts:** `.planning/phases/06I-bob-inbox-uat-closure/`
-
-## Phase 6J: Bob-First Dashboard Reorder
-
-**Goal:** Prioritize Bob Inbox and task entry above operational status cards.
-
-**Status:** Complete — verified local + Bob deploy
-
-**Artifacts:** `.planning/phases/06J-bob-first-dashboard-reorder/`
-
-## Phase 6K: Long Result Expand UAT
-
-**Goal:** UAT for long-result expand behavior (docs/UAT; harness when no long Bob task).
-
-**Status:** Complete — 2026-06-04
-
-**Artifacts:** `.planning/phases/06K-long-result-expand-uat/`
-
-## Phase 6L: Worker Artifact Visibility
-
-**Goal:** Read-only safe artifact listing in task detail from workspace metadata.
-
-**Status:** Complete — verified on Bob; limited when workspace removed
-
-**Artifacts:** `.planning/phases/06L-worker-artifact-visibility/`
-
-## Phase 6M: Bob Task Queue Hygiene
-
-**Goal:** Read-only assignee labels; `Legacy unassigned` for old ready tasks without assignee.
-
-**Status:** Complete — production-verified on Bob 2026-06-04
-
-**Artifacts:** `.planning/phases/06M-bob-task-queue-hygiene/`
-
-## Phase 6N: Bob UX Milestone Documentation Cleanup
-
-**Goal:** Align planning docs so delmilestone **2.1-bob-ux** (6A–6M) can close.
-
-**Status:** Complete — docs-only 2026-06-04
-
-**Artifacts:** `.planning/phases/06N-bob-ux-milestone-documentation-cleanup/`, `.planning/v2.1-bob-ux-MILESTONE-AUDIT.md`
-
-## Bob Dashboard / Kanban UX (delmilestone 2.1-bob-ux)
-
-**Phases:** 6A–6M (decimal track on top of Phase 5C/5D APIs)
-
-**Status:** **Complete and production-verified** — audit `tech_debt`, no Hermes UI blockers
-
-**Not the same as:** ROADMAP **Phase 6: Operations Enrichment** below (launchctl/Docker read-only cards, OPS-02/03).
-
-**Close with:** `/gsd-complete-milestone 2.1-bob-ux`
+</details>
 
 ## Phase 6: Operations Enrichment
 
 **Goal:** Add richer operational views for launchctl, Docker, and adjacent services where relevant.
 
-**Status:** Not started — next official roadmap phase after closing delmilestone 2.1-bob-ux
+**Status:** Not started — **next official roadmap phase** (after v2.1-bob-ux shipped 2026-06-04)
 
 **Requirements:** OPS-02, OPS-03
 
@@ -326,4 +215,4 @@ These are intentionally outside the first read-only MVP:
 All 19 v1 requirements are mapped to Phase 1 for the first safe read-only MVP.
 
 ---
-*Roadmap created: 2026-06-03*
+*Roadmap created: 2026-06-03 · v2.1-bob-ux archived: 2026-06-04*

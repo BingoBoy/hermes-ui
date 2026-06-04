@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Delmilestone **2.1-bob-ux** (Bob Dashboard / Kanban UX 6A–6M) — **production-verified** on `main`; documentation cleanup complete (6N). Next: `/gsd-complete-milestone 2.1-bob-ux`, then `/gsd-plan-phase 6` (ROADMAP Operations Enrichment).
+**Current focus:** **v2.1-bob-ux shipped** (2026-06-04). Next: `/gsd-plan-phase 6` — ROADMAP Phase 6 Operations Enrichment (not decimal 6A–6M).
 
-**Last activity:** 2026-06-04 — Phase 6N docs-only cleanup for Bob UX milestone closure.
+**Last activity:** 2026-06-04 — Milestone v2.1-bob-ux archived; tag `v2.1-bob-ux`.
 
 ## Workflow
 
@@ -22,11 +22,11 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | 6N (complete) → milestone close |
-| Name | Bob UX Milestone Documentation Cleanup |
-| Status | Docs-only cleanup done — Bob UX 6A–6M ready for `complete-milestone` |
-| Delmilestone | **2.1-bob-ux** — production-verified (`main` @ 6M+, Bob `/api/status` ok) |
-| Next command | `/gsd-complete-milestone 2.1-bob-ux` then `/gsd-plan-phase 6` |
+| Phase | — (between milestones) |
+| Name | v2.1-bob-ux complete; awaiting ROADMAP Phase 6 |
+| Status | Delmilestone **2.1-bob-ux** archived and tagged |
+| Last shipped | Bob Dashboard / Kanban UX 6A–6M — production-verified on Bob |
+| Next command | `/gsd-plan-phase 6` (Operations Enrichment) |
 
 ## Session Plan
 
@@ -219,18 +219,16 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - Phase 5 discuss mapped service actions and Bob entry; restart kickstart live-verified; 5A execute implemented locally.
 - Phase 5C discuss locked kanban create API/UI/security; local CLI JSON verified; Bob verify pending before execute.
 - Phase 6M shipped read-only Bob-oppgaver assignee labels (`Legacy unassigned` for ready tasks without assignee); no queue mutation.
-- Delmilestone **2.1-bob-ux** (6A–6M): Bob Dashboard / Kanban UX complete on `main`; audit `.planning/v2.1-bob-ux-MILESTONE-AUDIT.md` (`tech_debt`, no blockers).
-- `REQUIREMENTS.md` traceability for Bob UX deferred until `/gsd-complete-milestone 2.1-bob-ux`.
+- Delmilestone **2.1-bob-ux** archived 2026-06-04 — see `.planning/MILESTONES.md` and `.planning/milestones/v2.1-bob-ux-*`.
+- Bob UX informal requirements archived; main `REQUIREMENTS.md` v1 traceability unchanged.
 
-## Delmilestone 2.1-bob-ux (6A–6M, 2026-06-04)
+## Deferred Items (acknowledged at v2.1-bob-ux close)
 
-**Status:** Production-verified on Bob; documentation aligned in 6N.
-
-**Scope:** Dashboard-only Bob communication UX on top of 5C/5D APIs — templates, inbox, results, assignee labels, artifacts (read-only).
-
-**Audit:** `.planning/v2.1-bob-ux-MILESTONE-AUDIT.md` — verdict `tech_debt` (worker `hermes-assignee` external; REQUIREMENTS deferral).
-
-**Next official roadmap work:** ROADMAP **Phase 6: Operations Enrichment** (not the decimal 6A–6M track).
+| Category | Item | Status |
+|----------|------|--------|
+| ops | `hermes-assignee` missing in Bob kanban-worker environment | external |
+| planning | v1 REQUIREMENTS.md checkboxes not migrated to PROJECT Validated | deferred to project milestone |
+| verification | 06A–06B no dedicated VERIFICATION.md | accepted |
 
 ## Phase 6M Ship (2026-06-04)
 
@@ -262,4 +260,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after Phase 6N Bob UX milestone documentation cleanup*
+*Last updated: 2026-06-04 after v2.1-bob-ux milestone complete*
