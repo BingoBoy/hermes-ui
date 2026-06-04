@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 6C Task Templates — **complete & verified** 2026-06-04. Next: Phase 6 Operations Enrichment or backlog.
+**Current focus:** Phase 6D Template Inputs — **complete & verified** 2026-06-04. Next: Phase 6 Operations Enrichment or backlog.
 
 ## Workflow
 
