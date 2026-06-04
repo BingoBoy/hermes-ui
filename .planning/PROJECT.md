@@ -20,7 +20,7 @@ Truls can safely see whether Bob and Hermes are healthy without exposing shell a
 
 **Shipped phase:** ROADMAP Phase 6 Operations Enrichment (2026-06-04) — `GET /api/operations`, dashboard «Drift og tjenester».
 
-**Next:** `/gsd-progress` — roadmap review before new phase (5B start/stop, OPS-01 tunnel UI, or backlog).
+**Next:** Choose backlog item (5B, OPS-01, UI logs) via `/gsd-discuss-phase` or `/gsd-add-phase`. Audit: `.planning/v1-MILESTONE-AUDIT.md` (2026-06-04, `tech_debt`).
 
 ## Requirements
 
