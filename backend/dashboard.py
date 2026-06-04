@@ -502,63 +502,16 @@ DASHBOARD_HTML = """\
       </div>
     </header>
 
-    <section class="grid" aria-label="Statuskort">
-      <article class="card" id="card-service">
-        <h2>Hermes UI</h2>
-        <div class="status-row">
-          <span class="badge warn" id="service-badge">Laster</span>
-        </div>
-        <dl class="meta" id="service-meta"></dl>
-        <details><summary>Teknisk JSON</summary><pre id="service-json">Loading...</pre></details>
-      </article>
-
-      <article class="card" id="card-hermes">
-        <h2>Hermes Gateway</h2>
-        <div class="status-row">
-          <span class="badge warn" id="hermes-badge">Laster</span>
-        </div>
-        <dl class="meta" id="hermes-meta"></dl>
-        <div class="action-row" id="hermes-actions" hidden>
-          <button type="button" class="danger" id="restart-btn">Restart Gateway</button>
-        </div>
-        <div class="action-result" id="hermes-action-result" aria-live="polite"></div>
-        <details><summary>Teknisk JSON</summary><pre id="hermes-json">Loading...</pre></details>
-      </article>
-
-      <article class="card" id="card-system">
-        <h2>Bob / System</h2>
-        <div class="status-row">
-          <span class="badge warn" id="system-badge">Laster</span>
-        </div>
-        <dl class="meta" id="system-meta"></dl>
-        <details><summary>Teknisk JSON</summary><pre id="system-json">Loading...</pre></details>
-      </article>
-
-      <article class="card" id="card-logs">
-        <h2>Logger</h2>
-        <div class="status-row">
-          <span class="badge warn" id="logs-badge">Laster</span>
-        </div>
-        <dl class="meta" id="logs-meta"></dl>
-        <details><summary>Teknisk JSON</summary><pre id="logs-json">Loading...</pre></details>
-      </article>
-    </section>
-
-    <section class="logs-section">
-      <h2>Gateway-logger</h2>
-      <div class="logs-grid">
-        <article class="card log-panel">
-          <h3>Gateway Output</h3>
-          <p class="log-meta" id="stdout-meta">Laster...</p>
-          <div class="log-view" id="log-stdout" aria-live="polite"></div>
-          <details><summary>Teknisk JSON</summary><pre id="stdout-json">Loading...</pre></details>
-        </article>
-        <article class="card log-panel">
-          <h3>Gateway Errors</h3>
-          <p class="log-meta" id="stderr-meta">Laster...</p>
-          <div class="log-view" id="log-stderr" aria-live="polite"></div>
-          <details><summary>Teknisk JSON</summary><pre id="stderr-json">Loading...</pre></details>
-        </article>
+    <section class="card bob-section" id="bob-inbox-section" aria-label="Bob Inbox">
+      <h2>Bob Inbox</h2>
+      <p class="bob-intro">
+        Read-only innboks med ferdige oppgaver og resultater fra Bob (maks 8 nyeste).
+      </p>
+      <div class="bob-disabled" id="bob-inbox-disabled" hidden>
+        Bob Inbox er deaktivert (<code>ALLOW_BOB_TASKS=false</code>).
+      </div>
+      <div id="bob-inbox-content" hidden>
+        <div id="bob-inbox-list-wrap"></div>
       </div>
     </section>
 
@@ -676,16 +629,63 @@ DASHBOARD_HTML = """\
       <div class="action-result" id="bob-history-result" aria-live="polite"></div>
     </section>
 
-    <section class="card bob-section" id="bob-inbox-section" aria-label="Bob Inbox">
-      <h2>Bob Inbox</h2>
-      <p class="bob-intro">
-        Read-only innboks med ferdige oppgaver og resultater fra Bob (maks 8 nyeste).
-      </p>
-      <div class="bob-disabled" id="bob-inbox-disabled" hidden>
-        Bob Inbox er deaktivert (<code>ALLOW_BOB_TASKS=false</code>).
-      </div>
-      <div id="bob-inbox-content" hidden>
-        <div id="bob-inbox-list-wrap"></div>
+    <section class="grid" aria-label="Statuskort">
+      <article class="card" id="card-service">
+        <h2>Hermes UI</h2>
+        <div class="status-row">
+          <span class="badge warn" id="service-badge">Laster</span>
+        </div>
+        <dl class="meta" id="service-meta"></dl>
+        <details><summary>Teknisk JSON</summary><pre id="service-json">Loading...</pre></details>
+      </article>
+
+      <article class="card" id="card-hermes">
+        <h2>Hermes Gateway</h2>
+        <div class="status-row">
+          <span class="badge warn" id="hermes-badge">Laster</span>
+        </div>
+        <dl class="meta" id="hermes-meta"></dl>
+        <div class="action-row" id="hermes-actions" hidden>
+          <button type="button" class="danger" id="restart-btn">Restart Gateway</button>
+        </div>
+        <div class="action-result" id="hermes-action-result" aria-live="polite"></div>
+        <details><summary>Teknisk JSON</summary><pre id="hermes-json">Loading...</pre></details>
+      </article>
+
+      <article class="card" id="card-system">
+        <h2>Bob / System</h2>
+        <div class="status-row">
+          <span class="badge warn" id="system-badge">Laster</span>
+        </div>
+        <dl class="meta" id="system-meta"></dl>
+        <details><summary>Teknisk JSON</summary><pre id="system-json">Loading...</pre></details>
+      </article>
+
+      <article class="card" id="card-logs">
+        <h2>Logger</h2>
+        <div class="status-row">
+          <span class="badge warn" id="logs-badge">Laster</span>
+        </div>
+        <dl class="meta" id="logs-meta"></dl>
+        <details><summary>Teknisk JSON</summary><pre id="logs-json">Loading...</pre></details>
+      </article>
+    </section>
+
+    <section class="logs-section">
+      <h2>Gateway-logger</h2>
+      <div class="logs-grid">
+        <article class="card log-panel">
+          <h3>Gateway Output</h3>
+          <p class="log-meta" id="stdout-meta">Laster...</p>
+          <div class="log-view" id="log-stdout" aria-live="polite"></div>
+          <details><summary>Teknisk JSON</summary><pre id="stdout-json">Loading...</pre></details>
+        </article>
+        <article class="card log-panel">
+          <h3>Gateway Errors</h3>
+          <p class="log-meta" id="stderr-meta">Laster...</p>
+          <div class="log-view" id="log-stderr" aria-live="polite"></div>
+          <details><summary>Teknisk JSON</summary><pre id="stderr-json">Loading...</pre></details>
+        </article>
       </div>
     </section>
 

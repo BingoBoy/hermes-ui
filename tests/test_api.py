@@ -131,6 +131,17 @@ def test_dashboard_includes_bob_task_submission_ui() -> None:
     assert "asynkron kanban" in body
 
 
+def test_dashboard_orders_bob_communication_before_operations() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert body.index('id="bob-inbox-section"') < body.index('id="bob-task-section"')
+    assert body.index('id="bob-task-section"') < body.index('id="bob-history-section"')
+    assert body.index('id="bob-history-section"') < body.index('aria-label="Statuskort"')
+    assert body.index('aria-label="Statuskort"') < body.index("Gateway-logger")
+
+
 def test_dashboard_includes_bob_task_templates_ui() -> None:
     response = client.get("/")
 
