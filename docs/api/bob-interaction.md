@@ -2,7 +2,7 @@
 
 How Hermes UI submits a bounded asynchronous task to Bob via Hermes kanban — no browser terminal, chat, or arbitrary CLI.
 
-**Status:** Phase 5C implemented — `POST /api/bob/tasks` when `ALLOW_BOB_TASKS=true`.
+**Status:** Phase 5C/5D implemented — create and read-only list/show when `ALLOW_BOB_TASKS=true`.
 
 ## Goal
 
@@ -63,7 +63,7 @@ When body is empty after trim, omit `--body` and its value.
 
 API maps `id` → `task_id`, `status` → `status`.
 
-### `kanban list` (Phase 5D — read-only)
+### `kanban list` (5D — `GET /api/bob/tasks`)
 
 ```bash
 hermes kanban list --json
@@ -72,11 +72,11 @@ hermes kanban list --json
 | Aspect | Value |
 |--------|--------|
 | Success exit code | `0` |
-| Success stdout | JSON **array** of task objects (same shape as create) |
+| Success stdout | JSON **array** of task objects |
+| API query | `limit` default 20, max 50 (server-side slice) |
+| API errors | 403 gate off, 502 CLI/parse |
 
-Backend will slice to a server-side max (e.g. 20) — no client `--status` flags in v1.
-
-### `kanban show` (Phase 5D — read-only)
+### `kanban show` (5D — `GET /api/bob/tasks/{task_id}`)
 
 ```bash
 hermes kanban show <task_id> --json
@@ -85,8 +85,10 @@ hermes kanban show <task_id> --json
 | Aspect | Value |
 |--------|--------|
 | Success exit code | `0` |
-| Success stdout | Object with `task`, `comments`, `events`, `runs`, … |
-| Missing task | Prints `no such task: <id>` (often stderr) with exit **`0`** — parser must detect text, not exit code alone |
+| Success stdout | Object with `task`, `comments`, `events`, … |
+| Missing task | `no such task: …` with exit **`0`** → API **404** |
+| `task_id` | `t_` + alnum/underscore/dash, max 80 chars |
+| API errors | 400 invalid id, 404 not found, 403, 502 |
 
 ## Rejected Entry Points
 
@@ -109,7 +111,7 @@ Browser (Cloudflare Access)
   → ~/.hermes kanban.db + gateway dispatcher
 ```
 
-Read-only status (5D): `GET /api/bob/tasks`, `GET /api/bob/tasks/{id}` → `kanban list/show --json`.
+Read-only status (5D): `GET /api/bob/tasks`, `GET /api/bob/tasks/{task_id}` → `kanban list/show --json`.
 
 ## API: POST /api/bob/tasks
 
@@ -222,7 +224,7 @@ Confirm JSON shape matches this document and dispatcher processes `ready` tasks.
 | Phase | Deliverable |
 |-------|-------------|
 | 5C | POST `/api/bob/tasks` via kanban create |
-| 5D | GET task list/detail via kanban list/show |
+| 5D | GET task list/detail via kanban list/show | **Implemented** |
 
 ## Related Documents
 

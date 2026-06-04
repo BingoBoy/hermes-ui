@@ -173,6 +173,15 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 
 **Bob deploy gate:** set `ALLOW_BOB_TASKS=true` in plist/env after kanban verify on Bob; restart `no.truls.hermes-ui`.
 
+## Phase 5D Execute (2026-06-04)
+
+**Implemented:**
+
+- `GET /api/bob/tasks` — `hermes kanban list --json`, limit 20 default / 50 max
+- `GET /api/bob/tasks/{task_id}` — `hermes kanban show --json`, 404 on "no such task" even if exit 0
+- Dashboard «Bob-oppgaver» med liste og detaljvisning
+- 61 pytest tests passing locally
+
 ## Phase 5C Preflight (2026-06-04)
 
 **Testmiljø:** OK — `pytest.ini` med `pythonpath = .`

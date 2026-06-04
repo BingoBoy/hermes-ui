@@ -126,7 +126,7 @@
 | 5A | Restart-only action | POST restart with audit, confirmation, feature gate | Complete locally — Bob deploy pending |
 | 5B | Start/stop actions | bootstrap/bootout after live verification | Blocked |
 | 5C | Bob task entry | kanban create wrapper API | **Complete locally** — Bob deploy + ALLOW_BOB_TASKS verify pending |
-| 5D | Response/history view | Read-only kanban list/show | Blocked on 5C |
+| 5D | Response/history view | Read-only kanban list/show | **Complete locally** — Bob deploy pending |
 
 **Success criteria:**
 1. Exact launchctl restart command verified on Bob (`kickstart -k`).

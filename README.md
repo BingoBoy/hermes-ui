@@ -109,6 +109,8 @@ Allowlistede write-endepunkter:
 ```text
 POST /api/hermes/restart   # Phase 5A — krever ALLOW_SERVICE_ACTIONS=true
 POST /api/bob/tasks        # Phase 5C — krever ALLOW_BOB_TASKS=true
+GET /api/bob/tasks         # Phase 5D — read-only, krever ALLOW_BOB_TASKS=true
+GET /api/bob/tasks/{id}    # Phase 5D — read-only, krever ALLOW_BOB_TASKS=true
 ```
 
 Eksempler:
@@ -161,6 +163,10 @@ curl -s -X POST http://127.0.0.1:8787/api/hermes/restart
 curl -s -X POST http://127.0.0.1:8787/api/bob/tasks \
   -H 'Content-Type: application/json' \
   -d '{"title":"Test","body":"Safe test"}'
+# Forvent 403 når ALLOW_BOB_TASKS=false
+
+curl -s http://127.0.0.1:8787/api/bob/tasks?limit=20
+curl -s http://127.0.0.1:8787/api/bob/tasks/t_79f256ed
 # Forvent 403 når ALLOW_BOB_TASKS=false
 ```
 

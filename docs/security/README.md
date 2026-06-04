@@ -104,7 +104,7 @@ Implementation rules:
 
 **Bob verification gate:** Re-run kanban create/list/show on Bob before enabling `ALLOW_BOB_TASKS=true`. See `docs/api/bob-interaction.md`.
 
-**Not in 5C:** read-only task list (`GET /api/bob/tasks`) — Phase 5D.
+**Read-only (5D):** `GET /api/bob/tasks`, `GET /api/bob/tasks/{task_id}` — same `ALLOW_BOB_TASKS` gate; fixed `kanban list/show --json` argv; strict `task_id` validation; no audit by default.
 
 Before adding logs:
 
