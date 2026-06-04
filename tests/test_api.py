@@ -21,6 +21,8 @@ def test_api_status_returns_read_only_service_status() -> None:
     assert payload["allow_bob_tasks"] is False
     assert payload["capabilities"]["restart_hermes_gateway"] is False
     assert payload["capabilities"]["create_bob_task"] is False
+    assert payload["capabilities"]["list_bob_tasks"] is False
+    assert payload["capabilities"]["show_bob_task"] is False
 
 
 def test_api_system_returns_safe_system_payload() -> None:
@@ -55,6 +57,17 @@ def test_dashboard_returns_read_only_status_ui() -> None:
     assert "service-badge" in body
     assert "Teknisk JSON" in body
     assert "log-view" in body
+
+
+def test_dashboard_includes_bob_task_history_ui() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "bob-history-section" in body
+    assert "Bob-oppgaver" in body
+    assert "bob-history-refresh" in body
+    assert "Read-only historikk" in body
 
 
 def test_dashboard_includes_bob_task_submission_ui() -> None:

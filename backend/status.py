@@ -211,6 +211,8 @@ def get_service_status(settings: Settings) -> dict[str, Any]:
         "capabilities": {
             "restart_hermes_gateway": settings.allow_service_actions,
             "create_bob_task": settings.allow_bob_tasks,
+            "list_bob_tasks": settings.allow_bob_tasks,
+            "show_bob_task": settings.allow_bob_tasks,
         },
         "checked_at": datetime.now(timezone.utc).isoformat(),
     }

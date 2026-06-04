@@ -10,8 +10,12 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from backend.bob_tasks import (
     BobTasksDisabled,
     CooldownActive as BobCooldownActive,
+    InvalidTaskId,
     InvalidTaskInput,
+    TaskNotFound,
     build_task_create_response,
+    build_task_list_response,
+    build_task_show_response,
 )
 from backend.config import get_settings
 from backend.dashboard import render_dashboard
@@ -142,6 +146,66 @@ def api_bob_create_task(request: BobTaskRequest):
     if not payload["success"]:
         return JSONResponse(status_code=502, content=payload)
     return JSONResponse(status_code=202, content=payload)
+
+
+@app.get("/api/bob/tasks")
+def api_bob_list_tasks(
+    limit: int = Query(default=20, ge=1, le=50),
+):
+    settings = get_settings()
+    try:
+        payload = build_task_list_response(settings, limit=limit)
+    except BobTasksDisabled:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "bob_tasks_disabled",
+                "detail": "Bob task access is disabled on this server",
+            },
+        ) from None
+
+    if not payload["success"]:
+        return JSONResponse(status_code=502, content=payload)
+    return payload
+
+
+@app.get("/api/bob/tasks/{task_id}")
+def api_bob_show_task(task_id: str):
+    settings = get_settings()
+    try:
+        payload = build_task_show_response(settings, task_id)
+    except BobTasksDisabled:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "success": False,
+                "error": "bob_tasks_disabled",
+                "detail": "Bob task access is disabled on this server",
+            },
+        ) from None
+    except InvalidTaskId as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "success": False,
+                "error": "invalid_task_id",
+                "detail": str(exc),
+            },
+        ) from None
+    except TaskNotFound:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "success": False,
+                "error": "task_not_found",
+                "detail": f"Task not found: {task_id}",
+            },
+        ) from None
+
+    if not payload["success"]:
+        return JSONResponse(status_code=502, content=payload)
+    return payload
 
 
 @app.get("/api/logs/sources")

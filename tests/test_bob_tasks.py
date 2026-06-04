@@ -13,12 +13,22 @@ from backend.bob_tasks import (
     CREATE_KANBAN_TASK_ACTION,
     BobTasksDisabled,
     CooldownActive,
+    InvalidTaskId,
     InvalidTaskInput,
+    TaskNotFound,
     build_task_create_response,
+    build_task_list_response,
+    build_task_show_response,
+    clamp_list_limit,
     create_kanban_argv,
+    list_kanban_argv,
     normalize_task_input,
     reset_task_cooldown,
     run_create_kanban_task,
+    run_list_kanban_tasks,
+    run_show_kanban_task,
+    show_kanban_argv,
+    validate_task_id,
     write_audit_entry,
 )
 from backend.config import Settings
@@ -391,3 +401,243 @@ def test_api_bob_tasks_returns_502_on_json_parse_failure(
 def test_bob_tasks_code_does_not_target_hermes_ui_label() -> None:
     source = Path("backend/bob_tasks.py").read_text(encoding="utf-8")
     assert "no.truls.hermes-ui" not in source
+
+
+def _list_stdout(tasks: list[dict] | None = None) -> str:
+    items = tasks or [
+        {
+            "id": "t_79f256ed",
+            "title": "UI task",
+            "status": "ready",
+            "created_at": 1780560000,
+        },
+        {
+            "id": "t_older",
+            "title": "Older",
+            "status": "done",
+            "created_at": 1780550000,
+        },
+    ]
+    return json.dumps(items)
+
+
+def _show_stdout(task_id: str = "t_79f256ed") -> str:
+    return json.dumps(
+        {
+            "task": {
+                "id": task_id,
+                "title": "UI task",
+                "body": "Do something",
+                "status": "done",
+                "result": "Completed OK",
+                "created_at": 1780560000,
+            },
+            "events": [{"kind": "created", "created_at": 1780560000}],
+            "comments": [{"text": "Done", "created_at": 1780560100}],
+            "latest_summary": None,
+        }
+    )
+
+
+def test_validate_task_id_accepts_and_rejects() -> None:
+    assert validate_task_id("t_79f256ed") == "t_79f256ed"
+    with pytest.raises(InvalidTaskId):
+        validate_task_id("bad id")
+    with pytest.raises(InvalidTaskId):
+        validate_task_id("no-prefix")
+    with pytest.raises(InvalidTaskId):
+        validate_task_id("t_../escape")
+
+
+def test_clamp_list_limit() -> None:
+    assert clamp_list_limit(None) == 20
+    assert clamp_list_limit(5) == 5
+    assert clamp_list_limit(100) == 50
+
+
+def test_list_argv_is_fixed() -> None:
+    settings = Settings(allow_bob_tasks=True)
+    argv = list_kanban_argv(settings)
+    assert argv == [
+        settings.hermes_cli_bin,
+        "kanban",
+        "list",
+        "--json",
+    ]
+    assert "chat" not in argv
+    assert "-z" not in argv
+
+
+def test_show_argv_is_fixed() -> None:
+    settings = Settings(allow_bob_tasks=True)
+    argv = show_kanban_argv(settings, "t_abc")
+    assert argv == [
+        settings.hermes_cli_bin,
+        "kanban",
+        "show",
+        "t_abc",
+        "--json",
+    ]
+
+
+def test_list_respects_limit_slice() -> None:
+    settings = Settings(allow_bob_tasks=True)
+    tasks = [{"id": f"t_{i}", "title": str(i), "status": "ready"} for i in range(30)]
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=_list_stdout(tasks),
+            stderr="",
+        )
+
+    payload = build_task_list_response(settings, limit=10, runner=fake_runner)
+    assert payload["success"] is True
+    assert payload["count"] == 10
+    assert len(payload["tasks"]) == 10
+
+
+def test_show_no_such_task_returns_404_via_api(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "true")
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout="",
+            stderr="no such task: t_missing",
+        )
+
+    monkeypatch.setattr("backend.bob_tasks._default_runner", fake_runner)
+    client = TestClient(app)
+    response = client.get("/api/bob/tasks/t_missing")
+
+    assert response.status_code == 404
+    assert response.json()["detail"]["error"] == "task_not_found"
+
+
+def test_api_list_tasks_returns_403_when_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "false")
+    client = TestClient(app)
+    response = client.get("/api/bob/tasks")
+    assert response.status_code == 403
+
+
+def test_api_list_tasks_returns_200_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "true")
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=_list_stdout(),
+            stderr="",
+        )
+
+    monkeypatch.setattr("backend.bob_tasks._default_runner", fake_runner)
+    client = TestClient(app)
+    response = client.get("/api/bob/tasks?limit=5")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["success"] is True
+    assert len(payload["tasks"]) == 2
+    assert payload["limit"] == 5
+
+
+def test_api_show_task_returns_400_for_invalid_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "true")
+    client = TestClient(app)
+    response = client.get("/api/bob/tasks/not-valid")
+    assert response.status_code == 400
+
+
+def test_api_show_task_returns_200_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "true")
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=_show_stdout("t_79f256ed"),
+            stderr="",
+        )
+
+    monkeypatch.setattr("backend.bob_tasks._default_runner", fake_runner)
+    client = TestClient(app)
+    response = client.get("/api/bob/tasks/t_79f256ed")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["task_id"] == "t_79f256ed"
+    assert payload["task"]["status"] == "done"
+    assert payload["events"]
+
+
+def test_api_list_tasks_returns_502_on_cli_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "true")
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=1,
+            stdout="",
+            stderr="failed",
+        )
+
+    monkeypatch.setattr("backend.bob_tasks._default_runner", fake_runner)
+    client = TestClient(app)
+    response = client.get("/api/bob/tasks")
+    assert response.status_code == 502
+
+
+def test_api_list_tasks_returns_502_on_json_parse_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALLOW_BOB_TASKS", "true")
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout="not-json",
+            stderr="",
+        )
+
+    monkeypatch.setattr("backend.bob_tasks._default_runner", fake_runner)
+    client = TestClient(app)
+    response = client.get("/api/bob/tasks")
+    assert response.status_code == 502
+
+
+def test_run_list_requires_feature_gate() -> None:
+    with pytest.raises(BobTasksDisabled):
+        run_list_kanban_tasks(Settings(allow_bob_tasks=False))
+
+
+def test_build_show_raises_task_not_found() -> None:
+    settings = Settings(allow_bob_tasks=True)
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout="no such task: t_abc",
+            stderr="",
+        )
+
+    with pytest.raises(TaskNotFound):
+        build_task_show_response(settings, "t_abc", runner=fake_runner)
