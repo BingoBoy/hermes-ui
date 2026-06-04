@@ -54,12 +54,20 @@
 
 ---
 
+## v1.1: Operational Visibility (Planning: 2026-06-04)
+
+**Goal:** Read-only Cloudflare tunnel status + Hermes UI logs in dashboard.
+
+**Phases (planned):** 7 (tunnel status), 8 (Hermes UI logs)
+
+**Not in scope:** 5B start/stop, hermes-assignee worker fix, LM Studio/n8n.
+
+**Requirements:** `.planning/REQUIREMENTS.md`
+
+**Next:** `/gsd-discuss-phase 7`
+
+---
+
 ## What's next
 
-Milestones **v1** and **v2.1-bob-ux** are shipped and archived. No `REQUIREMENTS.md` on disk — define the next milestone with:
-
-```text
-/gsd-new-milestone
-```
-
-Or pick backlog work via `/gsd-discuss-phase` / `/gsd-add-phase` (5B, OPS-01, UI logs).
+**Active milestone:** v1.1 — start with Phase 7 (low-risk read-only).

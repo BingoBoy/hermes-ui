@@ -6,9 +6,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-04)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Milestones **v1** and **v2.1-bob-ux** archived. **No active roadmap phase.** Next: `/gsd-new-milestone` or backlog (5B, OPS-01, UI logs).
+**Current focus:** Milestone **v1.1 Operational Visibility** — requirements + roadmap defined. **Phase 7** next (read-only Cloudflare tunnel status). No code started.
 
-**Last activity:** 2026-06-04 — `/gsd-complete-milestone v1` (tag `v1`).
+**Last activity:** 2026-06-04 — `/gsd-new-milestone` v1.1.
 
 ## Workflow
 
@@ -22,11 +22,11 @@ discuss -> plan -> execute -> verify
 
 | Field | Value |
 |-------|-------|
-| Phase | — (between milestones) |
-| Name | v1 + v2.1-bob-ux shipped |
-| Status | Archived 2026-06-04 — Bob production-verified |
-| Requirements | See `milestones/v1-REQUIREMENTS.md`, `milestones/v2.1-bob-ux-REQUIREMENTS.md` |
-| Next command | `/gsd-new-milestone` or `/gsd-discuss-phase` for backlog |
+| Phase | 7 (not started) |
+| Name | v1.1 — Cloudflare Tunnel Status |
+| Status | Planning — discuss → plan → execute |
+| Requirements | `.planning/REQUIREMENTS.md` (OPS-01–03, LOG-UI-01–03) |
+| Next command | `/gsd-discuss-phase 7` |
 
 ## Session Plan
 
@@ -206,8 +206,8 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 
 - **5B:** Live-verify `launchctl bootstrap`/`bootout` for gateway start/stop in a maintenance window before any UI implementation.
 - **Bob ops (external):** `hermes-assignee` missing in kanban-worker environment — blocks full worker completion, not Hermes UI API.
-- **Planning:** v1 `REQUIREMENTS.md` traceability deferred to project audit (see `PROJECT.md` Validated for shipped work).
-- **Product:** No next official roadmap phase chosen yet.
+- **5B / ACT-01–02:** Deferred to v2 — not in v1.1; requires maintenance-window live verify.
+- **OPS-EXT-01:** `hermes-assignee` — external Bob ops, not Hermes UI Phase 7–8.
 
 **Standing security gates (unchanged):**
 
@@ -279,4 +279,4 @@ Planning artifacts: `.planning/phases/05-verified-service-actions/`, `docs/api/s
 - `.venv/bin/python -m pytest` passed: 11 tests.
 
 ---
-*Last updated: 2026-06-04 after v1 milestone complete*
+*Last updated: 2026-06-04 — v1.1 milestone started*

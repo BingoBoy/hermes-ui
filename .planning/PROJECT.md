@@ -10,16 +10,30 @@ Authoritative context: `docs/notion/` and GSD planning in `.planning/`.
 
 Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
+## Current Milestone: v1.1 Operational Visibility
+
+**Goal:** Extend production dashboard with **read-only** Cloudflare tunnel visibility and Hermes UI’s own bounded logs — without new write routes or 5B start/stop.
+
+**Target features:**
+
+- Cloudflare Tunnel / `cloudflared` status card (OPS-01)
+- Hermes UI LaunchAgent logs in existing logs viewer (LOG-UI)
+- Security regression checks on both phases
+
+**Explicitly not in v1.1:** Gateway start/stop (5B), `hermes-assignee` worker fix (external ops), LM Studio/n8n cards.
+
 ## Current State (2026-06-04)
 
 **Shipped milestones:**
 
-- **v1** — Phases 1–6 (MVP → logs → docs → Cloudflare → UX → restart/Bob APIs → operations)
-- **v2.1-bob-ux** — Bob dashboard UX (6A–6N)
+- **v1** — Phases 1–6
+- **v2.1-bob-ux** — 6A–6N
 
-**Production:** Bob and `origin/main` at `dd7e661`; 77 pytest passing.
+**Production:** Bob @ `c9ac8bf`; `https://hermes-ui.strategistudio.no`; 77 pytest passing.
 
-**Next:** `/gsd-new-milestone` for v1.1+ scope, or backlog item (5B, OPS-01, Hermes UI logs).
+**Planning:** v1.1 requirements + roadmap defined — **no implementation started.**
+
+**Next:** `/gsd-discuss-phase 7` then `/gsd-plan-phase 7` (recommended order: Phase 7 → Phase 8).
 
 ## Requirements
 
@@ -41,12 +55,17 @@ Truls can safely see whether Bob and Hermes are healthy without exposing shell a
 
 - ✓ Bob Inbox, templates, results, assignee, artifacts, queue labels — v2.1-bob-ux
 
-### Active (backlog — no milestone file yet)
+### Active (v1.1 — see `.planning/REQUIREMENTS.md`)
 
-- [ ] Gateway start/stop after live `bootstrap`/`bootout` verify (5B)
-- [ ] Cloudflare tunnel status in UI (OPS-01)
-- [ ] Hermes UI LaunchAgent logs in bounded viewer
-- [ ] Bob worker environment: `hermes-assignee` available
+- [ ] OPS-01–03: Cloudflare tunnel status (Phase 7)
+- [ ] LOG-UI-01–03: Hermes UI logs in dashboard (Phase 8)
+- [ ] SEC-01–02: No regression on write-route allowlist (Phases 7–8)
+
+### Backlog (post–v1.1)
+
+- [ ] Gateway start/stop — 5B, maintenance window + live verify
+- [ ] `hermes-assignee` on Bob worker — external ops
+- [ ] LM Studio / n8n adjacent services — product decision required
 
 ### Out of Scope
 
@@ -78,4 +97,4 @@ Truls can safely see whether Bob and Hermes are healthy without exposing shell a
 Updated at milestone boundaries via `/gsd-complete-milestone`.
 
 ---
-*Last updated: 2026-06-04 after v1 milestone*
+*Last updated: 2026-06-04 — milestone v1.1 Operational Visibility started*
