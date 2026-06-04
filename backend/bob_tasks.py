@@ -26,6 +26,7 @@ ALLOWED_READ_ACTIONS = frozenset({LIST_KANBAN_TASKS_ACTION, SHOW_KANBAN_TASK_ACT
 
 DEFAULT_LIST_LIMIT = 20
 MAX_LIST_LIMIT = 50
+MAX_LIST_SUMMARY_ENRICH = 8
 MAX_TASK_ID_LENGTH = 80
 _TASK_ID_PATTERN = re.compile(r"^t_[a-zA-Z0-9_-]+$")
 _ASSIGNEE_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
@@ -599,6 +600,53 @@ def _parse_show_stdout(stdout: str) -> dict[str, Any]:
     return payload
 
 
+def _task_result_is_empty(task: dict[str, Any]) -> bool:
+    result = task.get("result")
+    if result is None:
+        return True
+    if isinstance(result, str):
+        return not result.strip()
+    return False
+
+
+def _task_can_use_summary_enrichment(task: dict[str, Any]) -> bool:
+    status = str(task.get("status") or "").lower()
+    if status not in {"done", "completed", "failed", "blocked"}:
+        return False
+    if not _task_result_is_empty(task):
+        return False
+    if task.get("latest_summary"):
+        return False
+    task_id = task.get("id")
+    return isinstance(task_id, str) and bool(_TASK_ID_PATTERN.match(task_id))
+
+
+def _enrich_list_task_summaries(
+    settings: Settings,
+    tasks: list[dict[str, Any]],
+    *,
+    runner: CommandRunner | None = None,
+) -> None:
+    enriched = 0
+    for task in tasks:
+        if enriched >= MAX_LIST_SUMMARY_ENRICH:
+            return
+        if not _task_can_use_summary_enrichment(task):
+            continue
+
+        result = run_show_kanban_task(settings, str(task["id"]), runner=runner)
+        if not result.ok:
+            continue
+        try:
+            payload = _parse_show_stdout(result.stdout)
+        except ValueError:
+            continue
+        latest_summary = payload.get("latest_summary")
+        if isinstance(latest_summary, str) and latest_summary.strip():
+            task["latest_summary"] = latest_summary
+            enriched += 1
+
+
 def run_list_kanban_tasks(
     settings: Settings,
     *,
@@ -683,6 +731,7 @@ def build_task_list_response(
         }
 
     sliced = tasks[:bounded_limit]
+    _enrich_list_task_summaries(settings, sliced, runner=runner)
     return {
         "success": True,
         "tasks": sliced,

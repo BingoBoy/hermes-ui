@@ -573,6 +573,85 @@ def test_list_respects_limit_slice() -> None:
     assert len(payload["tasks"]) == 10
 
 
+def test_list_enriches_completed_task_latest_summary() -> None:
+    settings = Settings(allow_bob_tasks=True)
+    tasks = [
+        {
+            "id": "t_done",
+            "title": "Done",
+            "status": "done",
+            "result": None,
+            "created_at": 1780560000,
+        }
+    ]
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        if args[2] == "list":
+            stdout = _list_stdout(tasks)
+        else:
+            stdout = json.dumps(
+                {
+                    "task": tasks[0],
+                    "events": [],
+                    "comments": [],
+                    "latest_summary": "Completed summary",
+                }
+            )
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=stdout,
+            stderr="",
+        )
+
+    payload = build_task_list_response(settings, limit=10, runner=fake_runner)
+
+    assert payload["success"] is True
+    assert payload["tasks"][0]["latest_summary"] == "Completed summary"
+
+
+def test_list_summary_enrichment_is_bounded() -> None:
+    settings = Settings(allow_bob_tasks=True)
+    tasks = [
+        {
+            "id": f"t_done_{i}",
+            "title": f"Done {i}",
+            "status": "done",
+            "result": None,
+        }
+        for i in range(12)
+    ]
+    show_calls = 0
+
+    def fake_runner(args: list[str], timeout: float) -> subprocess.CompletedProcess[str]:
+        nonlocal show_calls
+        if args[2] == "list":
+            stdout = _list_stdout(tasks)
+        else:
+            show_calls += 1
+            task = next(item for item in tasks if item["id"] == args[3])
+            stdout = json.dumps(
+                {
+                    "task": task,
+                    "events": [],
+                    "comments": [],
+                    "latest_summary": f"Summary for {args[3]}",
+                }
+            )
+        return subprocess.CompletedProcess(
+            args=args,
+            returncode=0,
+            stdout=stdout,
+            stderr="",
+        )
+
+    payload = build_task_list_response(settings, limit=12, runner=fake_runner)
+
+    assert payload["success"] is True
+    assert show_calls == 8
+    assert sum(1 for task in payload["tasks"] if task.get("latest_summary")) == 8
+
+
 def test_show_no_such_task_returns_404_via_api(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
