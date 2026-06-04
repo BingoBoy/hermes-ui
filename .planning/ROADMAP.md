@@ -79,7 +79,7 @@
 
 **Requirements:** OPS-01, SEC-04
 
-**Status:** Planned on 2026-06-03 — execution deferred
+**Status:** Complete on 2026-06-04
 
 **Success criteria:**
 1. Tunnel identity and hostname are verified before configuration.
@@ -88,10 +88,12 @@
 4. No Cloudflare credentials are committed to the repo.
 5. Planning docs include manual command checklist and verification gates.
 
-**Suggested plans:**
-- Verify tunnel name, hostname, and Access policy.
-- Document ingress routing to `127.0.0.1:8787`.
-- Execute Cloudflare setup manually on Bob, then re-run security verification.
+**Actual outcome:**
+- Public URL: `https://hermes-ui.strategistudio.no`
+- Tunnel: `bob-mac-mini-m4` (existing tunnel reused)
+- Route: Published application route to `http://127.0.0.1:8787`
+- Access: self-hosted application with `Only Truls` policy
+- Unauthenticated curl verified with HTTP `302` redirect
 
 ## Phase 5: Verified Service Actions
 

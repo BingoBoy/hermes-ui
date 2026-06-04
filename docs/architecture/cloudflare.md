@@ -2,142 +2,100 @@
 
 ## Purpose
 
-This document plans secure external access to Hermes UI on Bob through Cloudflare Tunnel and Cloudflare Access. It is planning documentation only. No Cloudflare configuration is applied by this repo phase.
+This document describes how Hermes UI on Bob is exposed externally through Cloudflare Tunnel and Cloudflare Access.
 
-## Target Architecture
+## Live Architecture
 
 ```text
 Browser / MacBook / phone
   -> Cloudflare Access (Zero Trust)
-  -> Cloudflare Tunnel (cloudflared on Bob)
+  -> Cloudflare Tunnel (bob-mac-mini-m4, managed in Cloudflare)
   -> http://127.0.0.1:8787
   -> Hermes UI FastAPI (read-only)
 ```
 
-Rules:
+Rules in production:
 
-- Hermes UI stays bound to `127.0.0.1:8787`.
-- The tunnel forwards traffic to loopback only.
+- Hermes UI stays bound to `127.0.0.1:8787` on Bob.
+- The tunnel route targets loopback only.
 - No router port forwarding is used.
 - No backend binding to `0.0.0.0`.
 
-## Verified Preconditions on Bob
+## Verified Deployment
 
-Inspected read-only on 2026-06-03.
+Verified on 2026-06-04.
 
-| Field | Verified value |
-|-------|----------------|
-| Hostname | `Truls-sin-Mac-mini.local` |
-| User | `trulsdahl` |
-| Hermes UI bind | `127.0.0.1:8787` |
+| Field | Actual value |
+|-------|--------------|
+| Public URL | `https://hermes-ui.strategistudio.no` |
+| Tunnel name | `bob-mac-mini-m4` |
+| Route type | Published application route |
+| Route management | Cloudflare Dashboard |
+| Service target | `http://127.0.0.1:8787` |
+| Local bind on Bob | `127.0.0.1:8787` |
 | Hermes UI LaunchAgent | `no.truls.hermes-ui` |
-| `cloudflared` binary | `/opt/homebrew/bin/cloudflared` |
-| `cloudflared` version | `2026.5.1` |
-| DNS zone | `strategistudio.no` |
-| Zero Trust domain pattern | `strategistudio.cloudflareaccess.com` |
-| Existing Access-protected SSH | `bob-ssh.strategistudio.no` |
-| `cloudflared tunnel list` | Requires origin cert via `cloudflared tunnel login` |
+| Access application type | Self-hosted application |
+| Access policy | `Only Truls` pattern |
+| Local `config.yml` | Not created |
+| New tunnel created | No — existing `bob-mac-mini-m4` reused |
+| Tunnel credential model | Token-based / Cloudflare-managed |
 
-## Recommended Public Identity
+## Planning vs Actual
 
-| Item | Recommendation | Notes |
-|------|----------------|-------|
-| Primary hostname | `https://hermes.strategistudio.no` | Preferred public URL |
-| Fallback hostname | `https://hermes-ui.strategistudio.no` | Use only if `hermes` is unavailable |
-| Tunnel name | `mac-mini-m4-tunnel` | Dedicated Bob Mac Mini M4 tunnel |
-| Ingress service | `http://127.0.0.1:8787` | Must not point to LAN IP or `0.0.0.0` |
-| Access policy | `Only Truls` pattern | Match existing internal apps |
+| Item | Phase 4 plan | Actual deployment |
+|------|--------------|-------------------|
+| Hostname | `hermes.strategistudio.no` | `hermes-ui.strategistudio.no` |
+| Tunnel name | `mac-mini-m4-tunnel` | `bob-mac-mini-m4` |
+| Route setup | Local `config.yml` + CLI | Published application route in Cloudflare Dashboard |
+| New tunnel | Create dedicated tunnel | Reused existing active tunnel |
 
-Do not route Hermes UI through the legacy shared tunnel `kokebok-web`. Keep Hermes UI on a Bob-specific tunnel plan.
+## Cloudflare Access
 
-## Cloudflare Access Requirements
+Cloudflare Access is active for the public hostname.
 
-Before the public URL is used:
+Behavior:
 
-1. Create a Zero Trust application for `hermes.strategistudio.no`.
-2. Attach an Access policy that allows only authorized users.
-3. Verify unauthenticated requests stop at Cloudflare Access.
-4. Do not embed Access tokens in Hermes UI backend code for MVP.
+- Unauthenticated requests are blocked at Cloudflare Access.
+- Authenticated users reach Hermes UI through the tunnel.
+- Access protects dashboard `/` and read-only API routes under `/api/*`.
+- Hermes UI backend does not implement its own external auth layer for MVP.
 
-Access protects the entire application surface, including:
-
-- Dashboard `/`
-- Read-only API routes under `/api/*`
-
-## Tunnel and Ingress Plan
-
-### 1. Authenticate and inspect tunnels
-
-Run on Bob:
+Verified unauthenticated behavior:
 
 ```bash
-/opt/homebrew/bin/cloudflared --version
-/opt/homebrew/bin/cloudflared tunnel login
-/opt/homebrew/bin/cloudflared tunnel list
-/opt/homebrew/bin/cloudflared tunnel info mac-mini-m4-tunnel
+curl -sS -D - -o /dev/null https://hermes-ui.strategistudio.no/api/status
 ```
 
-If the tunnel does not exist:
+Expected:
 
-```bash
-/opt/homebrew/bin/cloudflared tunnel create mac-mini-m4-tunnel
-/opt/homebrew/bin/cloudflared tunnel info mac-mini-m4-tunnel
-```
+- HTTP `302`
+- Redirect to `https://strategistudio.cloudflareaccess.com/cdn-cgi/access/login/...`
+- No Hermes UI JSON body without Access login
 
-### 2. Route DNS
+## Tunnel Route
 
-```bash
-/opt/homebrew/bin/cloudflared tunnel route dns mac-mini-m4-tunnel hermes.strategistudio.no
-```
+The route was added in Cloudflare Dashboard under **Published application routes** for tunnel `bob-mac-mini-m4`:
 
-### 3. Ingress configuration
-
-Store config locally on Bob, not in git. Example shape:
-
-```yaml
-tunnel: mac-mini-m4-tunnel
-credentials-file: /Users/trulsdahl/.cloudflared/<TUNNEL-UUID>.json
-
-ingress:
-  - hostname: hermes.strategistudio.no
-    service: http://127.0.0.1:8787
-  - service: http_status:404
-```
+| Field | Value |
+|-------|-------|
+| Hostname | `hermes-ui.strategistudio.no` |
+| Service | `http://127.0.0.1:8787` |
+| Route type | Published application route |
 
 Notes:
 
-- Replace `<TUNNEL-UUID>` with the actual tunnel credential filename on Bob.
-- Never commit the credentials JSON file.
-- Keep a catch-all `http_status:404` rule last.
+- No Bob-local ingress `config.yml` was created for this route.
+- The tunnel remains token-based and managed through Cloudflare.
+- Do not route Hermes UI through unrelated legacy tunnels such as `kokebok-web`.
 
-### 4. Run or install the tunnel
+## Local Verification on Bob
 
-Manual test run:
-
-```bash
-/opt/homebrew/bin/cloudflared tunnel --config ~/.cloudflared/config.yml run mac-mini-m4-tunnel
-```
-
-After verification, install persistence through LaunchAgent or:
-
-```bash
-/opt/homebrew/bin/cloudflared service install
-```
-
-Choose one persistence model and document the final choice during execution.
-
-## Verification Sequence
-
-### Local verification on Bob
-
-Run before any external test:
+Run on Bob to confirm the backend remains healthy locally:
 
 ```bash
 launchctl list | grep hermes-ui
 lsof -nP -iTCP:8787 -sTCP:LISTEN
 curl -s http://127.0.0.1:8787/api/status | python3 -m json.tool
-curl -s http://127.0.0.1:8787/api/hermes/status | python3 -m json.tool
-curl -s http://127.0.0.1:8787/api/logs/sources | python3 -m json.tool
 ```
 
 Expected:
@@ -147,38 +105,47 @@ Expected:
 - `"read_only": true`
 - `"allow_unsafe_commands": false`
 
-### External verification after Access
+## External Verification
 
-From a device outside the local network:
-
-1. Open `https://hermes.strategistudio.no`
-2. Confirm Cloudflare Access login appears
-3. Sign in with authorized identity
-4. Confirm dashboard loads
-5. Confirm no write-action controls appear
-
-Optional header check:
+From an external client without Access credentials:
 
 ```bash
-curl -I https://hermes.strategistudio.no/
-curl -I https://hermes.strategistudio.no/api/status
+curl -sS -D - -o /dev/null https://hermes-ui.strategistudio.no/api/status
 ```
 
-Unauthenticated clients should not receive Hermes UI content directly.
+Expected: Cloudflare Access redirect (`302`), not direct API JSON.
+
+From an authenticated browser session:
+
+1. Open `https://hermes-ui.strategistudio.no`
+2. Complete Cloudflare Access login
+3. Confirm dashboard loads
+4. Confirm read-only behavior remains unchanged
+
+## Useful Inspection Commands
+
+These commands are for operational inspection only. They must not be pasted into git with secret output.
+
+```bash
+/opt/homebrew/bin/cloudflared --version
+/opt/homebrew/bin/cloudflared tunnel list
+/opt/homebrew/bin/cloudflared tunnel info bob-mac-mini-m4
+```
+
+Do not commit tunnel tokens, credential JSON, or Access service tokens.
 
 ## Secrets and Configuration Boundaries
 
-Keep local only on Bob:
+Keep local only on Bob or in Cloudflare:
 
-- `~/.cloudflared/<TUNNEL-UUID>.json`
-- `~/.cloudflared/cert.pem` after `cloudflared tunnel login`
-- `.env` with any future `HERMES_UI_PUBLIC_URL`
-- Cloudflare Access org tokens or service tokens
+- Tunnel tokens managed by Cloudflare
+- Access org tokens or service tokens
+- Real `.env` values such as `HERMES_UI_PUBLIC_URL=https://hermes-ui.strategistudio.no`
 
 Tracked in repo:
 
 - `.env.example` placeholders only
-- Documentation patterns and command examples without secret values
+- Documentation without secret values
 
 Never commit or paste into Notion:
 
@@ -190,27 +157,16 @@ Never commit or paste into Notion:
 
 ## Post-Go-Live Local Setting
 
-After external access is verified, set on Bob only:
+Set on Bob only, not in git:
 
 ```text
-HERMES_UI_PUBLIC_URL=https://hermes.strategistudio.no
+HERMES_UI_PUBLIC_URL=https://hermes-ui.strategistudio.no
 ```
 
-Do not add this to git. Update Bob LaunchAgent environment or local `.env` during execution.
-
-## Explicit Non-Actions in Planning Phase
-
-This planning phase did not:
-
-- create or modify Cloudflare tunnels
-- add DNS records
-- create Access applications
-- install a persistent `cloudflared` service
-- change Hermes UI backend code
-- bind Hermes UI to `0.0.0.0`
+Update Bob LaunchAgent environment or local `.env` if the app needs the public URL at runtime.
 
 ## Related Documents
 
 - `docs/architecture/deployment.md` — Bob LaunchAgent and local binding
 - `docs/security/README.md` — security gates and secret handling
-- `.planning/phases/04-cloudflare-access-tunnel/04-PLAN.md` — execution checklist
+- `.planning/phases/04-cloudflare-access-tunnel/04-PLAN.md` — phase execution record

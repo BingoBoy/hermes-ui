@@ -141,24 +141,35 @@ The redaction layer must run before JSON serialization and before any dashboard 
 
 ## Cloudflare Exposure Gate
 
-External access is planned through Cloudflare Tunnel and Cloudflare Access. It is not configured in the repository.
+Hermes UI is exposed externally through Cloudflare Tunnel and Cloudflare Access.
+
+Verified deployment:
+
+| Item | Actual value |
+|------|--------------|
+| Public hostname | `https://hermes-ui.strategistudio.no` |
+| Tunnel name | `bob-mac-mini-m4` |
+| Route type | Published application route |
+| Service target | `http://127.0.0.1:8787` |
+| Access policy | `Only Truls` pattern |
+| Unauthenticated curl | HTTP `302` to Cloudflare Access login |
 
 Rules:
 
 - Hermes UI must remain bound to `127.0.0.1:8787` on Bob.
-- The tunnel ingress must target `http://127.0.0.1:8787` only.
-- Cloudflare Access must be active before `https://hermes.strategistudio.no` is used.
+- The tunnel route must target `http://127.0.0.1:8787` only.
+- Cloudflare Access must remain active in front of the public URL.
 - Do not bind Hermes UI to `0.0.0.0`.
 - Do not open router ports for Hermes UI.
 - Do not commit Cloudflare credential JSON, Access tokens, or real `.env` values.
 
-Recommended public identity:
+Verification:
 
-| Item | Planned value |
-|------|---------------|
-| Primary hostname | `https://hermes.strategistudio.no` |
-| Tunnel name | `mac-mini-m4-tunnel` |
-| Access policy | `Only Truls` pattern |
+```bash
+curl -sS -D - -o /dev/null https://hermes-ui.strategistudio.no/api/status
+```
 
-See `docs/architecture/cloudflare.md` for the manual execution checklist.
+Expected: redirect to Cloudflare Access, not direct Hermes UI JSON.
+
+See `docs/architecture/cloudflare.md` for deployment details.
 

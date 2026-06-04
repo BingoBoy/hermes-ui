@@ -1,8 +1,9 @@
 # Phase 4: Cloudflare Access and Tunnel - Context
 
 **Gathered:** 2026-06-03
-**Status:** Ready for execution planning
-**Scope:** Plan and document secure external exposure — no runtime changes in this phase
+**Executed:** 2026-06-04
+**Status:** Complete
+**Scope:** Cloudflare deployment verified and documented
 
 <domain>
 
@@ -56,6 +57,17 @@ Phase 4 plans how Hermes UI on Bob should be exposed through Cloudflare Tunnel a
 - **D-21:** No write actions, free terminal, or shell-command routes may be added while planning Cloudflare exposure.
 - **D-22:** External exposure does not change the read-only MVP contract.
 - **D-23:** Logs API remains bounded and redacted; tunnel exposure does not widen filesystem access.
+
+### Actual Deployment Outcome
+
+- **D-24:** Public hostname in use: `https://hermes-ui.strategistudio.no`
+- **D-25:** Existing tunnel `bob-mac-mini-m4` was reused; no new tunnel was created.
+- **D-26:** Route was added as a Published application route in Cloudflare Dashboard.
+- **D-27:** Service target is `http://127.0.0.1:8787`.
+- **D-28:** No Bob-local ingress `config.yml` was created.
+- **D-29:** Tunnel remains token-based and Cloudflare-managed.
+- **D-30:** Cloudflare Access self-hosted application is active with `Only Truls` policy.
+- **D-31:** Unauthenticated external requests receive HTTP `302` to Cloudflare Access login.
 
 </decisions>
 

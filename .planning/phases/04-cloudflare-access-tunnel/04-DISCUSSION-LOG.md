@@ -68,6 +68,23 @@
 - No backend code was modified.
 - No secrets were written to git, Notion exports, or planning docs.
 
+## Execution Outcome
+
+**Date:** 2026-06-04
+
+| Item | Actual value |
+|------|--------------|
+| Public URL | `https://hermes-ui.strategistudio.no` |
+| Tunnel | `bob-mac-mini-m4` |
+| Route type | Published application route |
+| Service | `http://127.0.0.1:8787` |
+| Access | Self-hosted application, `Only Truls` policy |
+| Unauthenticated curl | HTTP `302` to Cloudflare Access login |
+| Local config.yml | Not created |
+| New tunnel | Not created |
+| Backend code changed | No |
+
 ---
 
 *Discussion log written: 2026-06-03*
+*Execution recorded: 2026-06-04*

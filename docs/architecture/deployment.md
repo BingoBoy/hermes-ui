@@ -105,29 +105,37 @@ Hermes UI and the Hermes gateway are separate LaunchAgents:
 
 Hermes UI reads gateway status and verified gateway logs through allowlisted backend logic. It does not control the gateway in the current read-only phase.
 
-## Forward Plan: Cloudflare Access and Tunnel
+## Cloudflare Access and Tunnel
 
-Planning completed in Phase 4. Execution is deferred until manual Cloudflare setup is run on Bob.
+Configured in Phase 4 on 2026-06-04.
 
-| Item | Planned value |
-|------|---------------|
-| Public URL | `https://hermes.strategistudio.no` |
-| Fallback URL | `https://hermes-ui.strategistudio.no` |
-| Tunnel name | `mac-mini-m4-tunnel` |
-| Ingress target | `http://127.0.0.1:8787` |
-| Access policy | `Only Truls` pattern in Zero Trust |
+| Item | Actual value |
+|------|--------------|
+| Public URL | `https://hermes-ui.strategistudio.no` |
+| Tunnel name | `bob-mac-mini-m4` |
+| Route type | Published application route |
+| Service target | `http://127.0.0.1:8787` |
+| Access policy | `Only Truls` pattern |
+| Local bind on Bob | `127.0.0.1:8787` unchanged |
+| Local `config.yml` | Not created |
+| New tunnel created | No |
 
-Planned sequence:
+External access flow:
 
-1. Keep Hermes UI bound to `127.0.0.1:8787` on Bob.
-2. Authenticate `cloudflared` and create or select the Bob Mac Mini M4 tunnel.
-3. Route `hermes.strategistudio.no` through the tunnel to loopback.
-4. Protect the hostname with Cloudflare Access before sharing the URL.
-5. Re-run local and external verification.
+1. Client hits `https://hermes-ui.strategistudio.no`
+2. Cloudflare Access enforces login for unauthenticated requests
+3. Cloudflare Tunnel forwards authorized traffic to `http://127.0.0.1:8787`
+4. Hermes UI backend remains read-only and loopback-bound
 
-See `docs/architecture/cloudflare.md` for command checklist and verification gates.
+Unauthenticated verification:
 
-No Cloudflare configuration was changed during the planning phase.
+```bash
+curl -sS -D - -o /dev/null https://hermes-ui.strategistudio.no/api/status
+```
+
+Expected: HTTP `302` redirect to Cloudflare Access login, not direct API JSON.
+
+See `docs/architecture/cloudflare.md` for full deployment details.
 
 ## Related Documents
 

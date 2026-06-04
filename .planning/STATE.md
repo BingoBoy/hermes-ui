@@ -6,7 +6,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **Core value:** Truls can safely see whether Bob and Hermes are healthy without exposing shell access, secrets, or unsafe service controls.
 
-**Current focus:** Phase 4 - Cloudflare Access and Tunnel (planned, not executed)
+**Current focus:** Phase 5 - Verified Service Actions
 
 ## Workflow
 
@@ -22,10 +22,10 @@ discuss -> plan -> execute -> verify
 |-------|-------|
 | Phase | 4 |
 | Name | Cloudflare Access and Tunnel |
-| Status | Planned |
+| Status | Complete |
 | Requirements | OPS-01, SEC-04 |
-| Current command | `/gsd-discuss-phase 4` completed as docs-only planning |
-| Next command | Manual Cloudflare execution on Bob, then `/gsd-execute-phase 4` or verification |
+| Current command | `/gsd-execute-phase 4` completed as docs verification |
+| Next command | `/gsd-discuss-phase 5` for verified service actions |
 
 ## Session Plan
 
@@ -43,16 +43,14 @@ Atomic tasks:
 
 ## Latest Verification
 
-**Verified:** 2026-06-03
+**Verified:** 2026-06-04
 
-- Python syntax compilation passed for `backend` and `tests`.
-- Pytest passed: 10 tests.
-- Local server started on `127.0.0.1:8787`.
-- Curl checks passed for `/api/status`, `/api/system`, and `/api/hermes/status`.
-- Hermes status returned safe `not_detected` state when Hermes was not found locally.
-- Security search found no write-action routes, `shell=True`, unsafe flag, or credentials indicators outside Notion exports.
-- `.env` is not tracked by git.
-- `ALLOW_UNSAFE_COMMANDS=false` remains in `.env.example`.
+- Hermes UI exposed at `https://hermes-ui.strategistudio.no`
+- Unauthenticated curl to `/api/status` returns HTTP `302` to Cloudflare Access login
+- Backend on Bob remains bound to `127.0.0.1:8787`
+- `.venv/bin/python -m pytest` passed: 10 tests
+- No backend code changed in Phase 4 documentation commit
+- No secrets committed to git
 
 ## Phase 2 Log Source Findings
 
@@ -88,6 +86,21 @@ Atomic tasks:
 - `read_only`: `true`
 - `allow_unsafe_commands`: `false`
 
+## Phase 4 Cloudflare Deployment
+
+**Verified on:** 2026-06-04
+
+- Public URL: `https://hermes-ui.strategistudio.no`
+- Tunnel name: `bob-mac-mini-m4`
+- Route type: Published application route
+- Service target: `http://127.0.0.1:8787`
+- Access application: Self-hosted application
+- Access policy: `Only Truls` pattern
+- Local `config.yml`: not created
+- New tunnel created: no
+- Tunnel model: token-based / Cloudflare-managed
+- Unauthenticated curl: HTTP `302` redirect to Cloudflare Access login
+
 ## Open Gates
 
 - Verify actual Hermes launchctl commands before implementing start, stop, or restart in UI.
@@ -95,63 +108,27 @@ Atomic tasks:
 - Keep Phase 1 read-only complete; future phases must not reintroduce write actions without their own verification.
 - Keep real `.env` out of git.
 - Keep `ALLOW_UNSAFE_COMMANDS=false`.
-- Cloudflare Tunnel and Access are planned but not configured yet.
 - Do not add any API route that accepts a file path from client input.
 
 ## Memory
 
 - `docs/notion/` is authoritative source context.
 - `127.0.0.1:8787` is the local binding target.
-- Cloudflare Access is required for later external access.
+- External access is live at `https://hermes-ui.strategistudio.no` behind Cloudflare Access.
 - Free terminal in browser is out of scope.
 - Phase 1 includes the first read-only MVP foundation, not write actions.
 - Phase 2 implemented bounded read-only logs API for `gateway_stdout` and `gateway_stderr`.
 - Phase 3 documented verified Hermes UI LaunchAgent deployment on Bob.
-- Phase 4 planned Cloudflare Tunnel and Access exposure without changing runtime.
-
-## Phase 4 Cloudflare Planning
-
-**Planned on:** 2026-06-03
-
-- Recommended public hostname: `https://hermes.strategistudio.no`
-- Fallback hostname: `https://hermes-ui.strategistudio.no`
-- Recommended tunnel name: `mac-mini-m4-tunnel`
-- Ingress target: `http://127.0.0.1:8787`
-- Access policy: `Only Truls` pattern in Zero Trust
-- `cloudflared` on Bob: `/opt/homebrew/bin/cloudflared` version `2026.5.1`
-- `cloudflared tunnel list` requires `cloudflared tunnel login` before tunnel inspection
-- Legacy tunnel `kokebok-web` documented but not chosen for Hermes UI
-- No Cloudflare configuration was changed during planning
-
-## Phase 2 Verification
-
-**Verified:** 2026-06-03
-
-- `python3 -m compileall backend tests` passed.
-- `.venv/bin/python -m pytest` passed: 10 tests.
-- Curl checks passed for `/api/logs/sources`, `/api/logs/gateway_stdout`, and `/api/logs/gateway_stderr`.
-- Missing local log files on dev machine returned safe structured errors without traceback.
-- Security scan found no `shell=True`, no write-action routes, and no unsafe command/path API.
-
-## Phase 3 Verification
-
-**Verified:** 2026-06-03
-
-- Docs-only change: no backend or test code modified.
-- Bob LaunchAgent metadata verified via read-only SSH inspection.
-- `git status` confirmed documentation and planning updates only.
-- Secret scan found no committed `.env` or credential material.
-- `.venv/bin/python -m pytest` passed: 10 tests.
+- Phase 4 deployed and documented Cloudflare Tunnel and Access exposure.
 
 ## Phase 4 Verification
 
-**Verified:** 2026-06-03
+**Verified:** 2026-06-04
 
-- Docs-only change: no backend or test code modified.
-- Bob Cloudflare preconditions verified read-only via SSH inspection.
+- Docs-only change in repo: no backend or test code modified.
+- External curl check returned HTTP `302` to Cloudflare Access login for unauthenticated `/api/status`.
 - Secret scan found no committed `.env`, credentials, or token material added by this phase.
-- No Cloudflare tunnels, DNS routes, or Access apps were created.
 - `.venv/bin/python -m pytest` passed: 10 tests.
 
 ---
-*Last updated: 2026-06-03 after Phase 4 Cloudflare planning*
+*Last updated: 2026-06-04 after Phase 4 Cloudflare deployment documentation*
