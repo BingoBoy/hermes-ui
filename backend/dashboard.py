@@ -915,6 +915,12 @@ DASHBOARD_HTML = """\
       const results = payload.results || [];
       meta.textContent =
         `${results.length} treff for "${payload.query}" på ${payload.sourceUrl}`;
+      if (payload.safety?.restrictedMetadataMode) {
+        setSiteSearchMessage(
+          "Begrenset metadatamodus: viser bare synlige resultatmetadata, ikke magnetlenker eller nedlasting.",
+          "warn",
+        );
+      }
 
       if (!results.length) {
         const empty = document.createElement("p");
@@ -965,7 +971,11 @@ DASHBOARD_HTML = """\
 
       if (!result.ok) {
         const detail = result.error || "Søket feilet";
-        setSiteSearchMessage(detail, result.status === 422 ? "warn" : "bad");
+        const safety = result.body?.detail?.safety;
+        const safetyPrefix = safety?.restrictedMetadataMode
+          ? "Begrenset metadatamodus: "
+          : "";
+        setSiteSearchMessage(`${safetyPrefix}${detail}`, result.status === 422 ? "warn" : "bad");
         document.getElementById("site-search-meta").textContent =
           `Søket stoppet med HTTP ${result.status}.`;
         setJson("site-search-json", result.body || result);

@@ -22,6 +22,19 @@ SEARCH_FIELD_SELECTORS = (
 )
 
 LOCAL_HOSTNAMES = frozenset({"localhost", "127.0.0.1", "0.0.0.0", "::1"})
+RESTRICTED_METADATA_HOSTS = frozenset(
+    {
+        "1337x.to",
+        "www.1337x.to",
+    }
+)
+DISALLOWED_RESULT_SCHEMES = frozenset({"magnet"})
+DISALLOWED_RESULT_PATH_TERMS = (
+    "/torrent/",
+    "/torrentdownload/",
+    "/download/",
+    "/magnet/",
+)
 
 
 class SiteSearchError(Exception):
@@ -123,6 +136,28 @@ def validate_public_site_url(site_url: str) -> str:
     return normalized
 
 
+def site_safety_payload(site_url: str) -> dict[str, Any]:
+    host = (urlparse(site_url).hostname or "").lower()
+    restricted = host in RESTRICTED_METADATA_HOSTS
+    return {
+        "restrictedMetadataMode": restricted,
+        "classification": "torrent_index" if restricted else "public_website",
+        "allowedActions": [
+            "open_public_page",
+            "submit_visible_search_field",
+            "read_visible_result_metadata",
+        ],
+        "blockedActions": [
+            "login",
+            "use_private_cookies",
+            "bypass_paywalls_or_captcha",
+            "follow_magnet_links",
+            "download_files",
+            "extract_torrent_files",
+        ],
+    }
+
+
 async def search_public_website(
     input_data: SiteSearchInput,
     *,
@@ -210,6 +245,7 @@ async def search_public_website(
         "sourceUrl": site_url,
         "query": query,
         "normalizedQuery": normalize_search_text(query),
+        "safety": site_safety_payload(site_url),
         "results": [result_to_payload(result) for result in results],
     }
 
@@ -251,7 +287,7 @@ def _rank_results(query: str, raw_results: list[dict[str, str]]) -> list[SiteSea
         raw_text = (raw.get("rawText") or title).strip()
         if not url or not title or url in seen_urls:
             continue
-        if urlparse(url).scheme not in {"http", "https"}:
+        if not _is_allowed_result_url(url):
             continue
 
         score = score_site_search_result(query, f"{title} {raw_text}")
@@ -271,6 +307,16 @@ def _rank_results(query: str, raw_results: list[dict[str, str]]) -> list[SiteSea
         )
 
     return sorted(results, key=lambda result: result.score, reverse=True)[:MAX_RESULTS]
+
+
+def _is_allowed_result_url(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme in DISALLOWED_RESULT_SCHEMES:
+        return False
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    path = parsed.path.lower()
+    return not any(term in path for term in DISALLOWED_RESULT_PATH_TERMS)
 
 
 def result_to_payload(result: SiteSearchResult) -> dict[str, Any]:

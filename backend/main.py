@@ -29,7 +29,12 @@ from backend.service_actions import (
     build_restart_response,
 )
 from backend.operations import get_operations_status
-from backend.site_search import SiteSearchError, SiteSearchInput, search_public_website
+from backend.site_search import (
+    SiteSearchError,
+    SiteSearchInput,
+    search_public_website,
+    site_safety_payload,
+)
 from backend.status import get_hermes_status, get_service_status, get_system_status
 
 
@@ -89,6 +94,7 @@ async def api_site_search(
                 "success": False,
                 "error": exc.error,
                 "detail": exc.detail,
+                "safety": site_safety_payload(site_url),
             },
         ) from None
 

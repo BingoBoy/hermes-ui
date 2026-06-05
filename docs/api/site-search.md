@@ -41,9 +41,34 @@ links with score and snippet.
 - The adapter only reads visible links and metadata from public pages.
 - It does not log in, use user cookies, bypass paywalls, solve CAPTCHA, follow
   magnet links, or download files.
+- Magnet links, torrent/download paths, JavaScript URLs, and non-HTTP result
+  URLs are filtered out of the returned result list.
 - If no visible search field is found, the endpoint returns a structured error.
 - Browser launch, navigation, query submission, and result extraction failures
   are returned as structured errors instead of raw tracebacks.
+
+## Restricted metadata mode
+
+Some public sites are classified as high-risk torrent index surfaces. For these
+domains, including `1337x.to`, the endpoint still uses the same generic public
+search flow but returns an explicit `safety.restrictedMetadataMode=true` marker.
+
+Restricted metadata mode allows:
+
+- opening the public page
+- submitting a visible search field
+- reading visible result metadata
+
+Restricted metadata mode blocks:
+
+- login or private cookies
+- CAPTCHA/paywall bypass
+- magnet links
+- torrent file extraction
+- file downloads
+
+If the site blocks automation, returns a 403-style page, or hides its search
+field, the endpoint returns a structured error instead of trying workarounds.
 
 ## Scoring
 

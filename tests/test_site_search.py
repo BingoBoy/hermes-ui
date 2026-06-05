@@ -11,6 +11,7 @@ from backend.site_search import (
     SiteSearchInput,
     build_flexible_search_regex,
     normalize_search_text,
+    site_safety_payload,
     score_site_search_result,
     search_public_website,
     validate_public_site_url,
@@ -67,6 +68,21 @@ class FakePage:
                 "title": "Star.Wars.Script",
                 "url": "javascript:alert(1)",
                 "rawText": "Star.Wars.Script",
+            },
+            {
+                "title": "Star.Wars.Magnet",
+                "url": "magnet:?xt=urn:btih:abc",
+                "rawText": "Star.Wars.Magnet",
+            },
+            {
+                "title": "Star.Wars.Download",
+                "url": "https://example.com/download/star-wars",
+                "rawText": "Star.Wars.Download",
+            },
+            {
+                "title": "Star.Wars.Detail",
+                "url": "https://example.com/torrent/star-wars",
+                "rawText": "Star.Wars.Detail",
             },
             {
                 "title": "Completely unrelated",
@@ -159,6 +175,23 @@ def test_validate_public_site_url_rejects_non_public_targets() -> None:
     assert private_ip.value.error == "private_url"
 
 
+def test_site_safety_payload_marks_1337x_as_restricted_metadata() -> None:
+    payload = site_safety_payload("https://1337x.to/home/")
+
+    assert payload["restrictedMetadataMode"] is True
+    assert payload["classification"] == "torrent_index"
+    assert "read_visible_result_metadata" in payload["allowedActions"]
+    assert "follow_magnet_links" in payload["blockedActions"]
+    assert "download_files" in payload["blockedActions"]
+
+
+def test_site_safety_payload_keeps_regular_sites_unrestricted() -> None:
+    payload = site_safety_payload("https://www.wikipedia.org/")
+
+    assert payload["restrictedMetadataMode"] is False
+    assert payload["classification"] == "public_website"
+
+
 def test_search_public_website_returns_ranked_structured_results() -> None:
     fake_context = FakePlaywrightContext()
 
@@ -172,6 +205,7 @@ def test_search_public_website_returns_ranked_structured_results() -> None:
     assert payload["sourceUrl"] == "https://example.com/search"
     assert payload["query"] == "star wars"
     assert payload["normalizedQuery"] == "star wars"
+    assert payload["safety"]["restrictedMetadataMode"] is False
     assert payload["results"] == [
         {
             "title": "Star.Wars.1977",
@@ -198,3 +232,28 @@ def test_site_search_api_rejects_private_url() -> None:
 
     assert response.status_code == 400
     assert response.json()["detail"]["error"] == "private_url"
+
+
+def test_site_search_api_error_includes_restricted_safety_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_search(input_data: SiteSearchInput) -> dict[str, object]:
+        raise SiteSearchError(
+            "search_field_not_found",
+            "No visible search field was found on the public website",
+            status_code=422,
+        )
+
+    monkeypatch.setattr("backend.main.search_public_website", fake_search)
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/site-search",
+        params={"siteUrl": "https://1337x.to/home/", "query": "ubuntu"},
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert detail["error"] == "search_field_not_found"
+    assert detail["safety"]["restrictedMetadataMode"] is True
+    assert detail["safety"]["classification"] == "torrent_index"
