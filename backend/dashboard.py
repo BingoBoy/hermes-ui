@@ -314,6 +314,61 @@ DASHBOARD_HTML = """\
       min-height: 120px;
       resize: vertical;
     }
+    .site-search-form {
+      display: grid;
+      gap: 12px;
+      max-width: 760px;
+    }
+    .site-search-fields {
+      display: grid;
+      grid-template-columns: minmax(260px, 1.4fr) minmax(220px, 1fr);
+      gap: 12px;
+    }
+    .site-search-results {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .site-search-result {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fafbfc;
+    }
+    .site-search-result header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 6px;
+    }
+    .site-search-result h3 {
+      margin: 0;
+      font-size: 0.98rem;
+    }
+    .site-search-result a {
+      color: #1d4ed8;
+      overflow-wrap: anywhere;
+    }
+    .site-search-snippet {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      margin: 8px 0 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .site-search-meta {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 10px 0 0;
+    }
+    .site-search-empty {
+      color: var(--muted);
+      font-style: italic;
+      margin: 10px 0 0;
+    }
     .bob-disabled {
       border-left: 4px solid var(--border);
       background: #f8fafc;
@@ -511,6 +566,12 @@ DASHBOARD_HTML = """\
       font-size: 0.9rem;
       color: var(--muted);
     }
+    @media (max-width: 720px) {
+      body { padding: 16px; }
+      .site-search-fields {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -537,6 +598,37 @@ DASHBOARD_HTML = """\
       <div id="bob-inbox-content" hidden>
         <div id="bob-inbox-list-wrap"></div>
       </div>
+    </section>
+
+    <section class="card bob-section" id="site-search-section" aria-label="Nettsidesøk">
+      <h2>Nettsidesøk</h2>
+      <p class="bob-intro">
+        Søk i en offentlig nettside med synlig søkefelt. Resultatene vises som metadata — ingen innlogging eller nedlasting.
+      </p>
+      <form class="site-search-form" id="site-search-form">
+        <div class="site-search-fields">
+          <div class="field">
+            <label for="site-search-url">Offentlig URL</label>
+            <input type="url" id="site-search-url" name="siteUrl" required
+              placeholder="https://www.wikipedia.org/" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="site-search-query">Søketekst</label>
+            <input type="text" id="site-search-query" name="query" maxlength="200" required
+              placeholder="oslo" autocomplete="off" />
+          </div>
+        </div>
+        <div class="action-row">
+          <button type="submit" id="site-search-submit">Søk</button>
+        </div>
+      </form>
+      <div class="action-result" id="site-search-result" aria-live="polite"></div>
+      <p class="site-search-meta" id="site-search-meta">Ingen søk kjørt ennå.</p>
+      <div class="site-search-results" id="site-search-results"></div>
+      <details style="margin-top: 12px;">
+        <summary>Teknisk JSON</summary>
+        <pre id="site-search-json">Ingen data</pre>
+      </details>
     </section>
 
     <section class="card bob-section" id="bob-task-section" aria-label="Send oppgave til Bob">
@@ -806,6 +898,82 @@ DASHBOARD_HTML = """\
         return { ok: false, error: detail, status: response.status, body };
       }
       return { ok: true, data: await response.json(), status: response.status };
+    }
+
+    function setSiteSearchMessage(message, tone) {
+      const target = document.getElementById("site-search-result");
+      target.textContent = message || "";
+      target.className = message ? `action-result ${tone}` : "action-result";
+    }
+
+    function renderSiteSearchResults(payload) {
+      const resultsWrap = document.getElementById("site-search-results");
+      const meta = document.getElementById("site-search-meta");
+      resultsWrap.innerHTML = "";
+      setJson("site-search-json", payload);
+
+      const results = payload.results || [];
+      meta.textContent =
+        `${results.length} treff for "${payload.query}" på ${payload.sourceUrl}`;
+
+      if (!results.length) {
+        const empty = document.createElement("p");
+        empty.className = "site-search-empty";
+        empty.textContent = "Ingen treff med positiv match-score.";
+        resultsWrap.appendChild(empty);
+        return;
+      }
+
+      for (const result of results) {
+        const item = document.createElement("article");
+        item.className = "site-search-result";
+        const title = result.title || result.url || "Uten tittel";
+        const score = Number(result.score || 0);
+        item.innerHTML = `
+          <header>
+            <h3><a href="${escapeHtml(result.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)}</a></h3>
+            <span class="status-pill ${score >= 80 ? "completed" : "ready"}">${score} poeng</span>
+          </header>
+          <a href="${escapeHtml(result.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(result.url)}</a>
+          ${result.snippet ? `<p class="site-search-snippet">${escapeHtml(result.snippet)}</p>` : ""}
+        `;
+        resultsWrap.appendChild(item);
+      }
+    }
+
+    async function submitSiteSearch(event) {
+      event.preventDefault();
+      const urlInput = document.getElementById("site-search-url");
+      const queryInput = document.getElementById("site-search-query");
+      const submitBtn = document.getElementById("site-search-submit");
+      const siteUrl = urlInput.value.trim();
+      const query = queryInput.value.trim();
+
+      if (!siteUrl || !query) {
+        setSiteSearchMessage("Fyll inn offentlig URL og søketekst.", "warn");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      setSiteSearchMessage("Søker...", "warn");
+      document.getElementById("site-search-meta").textContent = "Søket kjører...";
+      document.getElementById("site-search-results").innerHTML = "";
+
+      const params = new URLSearchParams({ siteUrl, query });
+      const result = await fetchJson(`/api/site-search?${params.toString()}`);
+      submitBtn.disabled = false;
+
+      if (!result.ok) {
+        const detail = result.error || "Søket feilet";
+        setSiteSearchMessage(detail, result.status === 422 ? "warn" : "bad");
+        document.getElementById("site-search-meta").textContent =
+          `Søket stoppet med HTTP ${result.status}.`;
+        setJson("site-search-json", result.body || result);
+        return;
+      }
+
+      setSiteSearchMessage("Søk fullført.", "ok");
+      renderSiteSearchResults(result.data);
     }
 
     let serviceActionsEnabled = false;
@@ -1922,6 +2090,7 @@ DASHBOARD_HTML = """\
         closeRestartModal();
       }
     });
+    document.getElementById("site-search-form").addEventListener("submit", submitSiteSearch);
     document.getElementById("bob-task-form").addEventListener("submit", submitBobTask);
     document.querySelectorAll(".bob-template-send-btn").forEach((btn) => {
       btn.addEventListener("click", () => sendBobTaskTemplate(btn.dataset.templateId));

@@ -64,6 +64,11 @@ class FakePage:
                 "rawText": "Star.Wars.1977 movie",
             },
             {
+                "title": "Star.Wars.Script",
+                "url": "javascript:alert(1)",
+                "rawText": "Star.Wars.Script",
+            },
+            {
                 "title": "Completely unrelated",
                 "url": "https://example.com/other",
                 "rawText": "Nothing to see",

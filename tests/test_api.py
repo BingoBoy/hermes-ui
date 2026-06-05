@@ -104,6 +104,23 @@ def test_dashboard_includes_bob_inbox_ui() -> None:
     assert "renderBobInbox" in body
 
 
+def test_dashboard_includes_site_search_ui() -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    body = response.text
+    assert "site-search-section" in body
+    assert "Nettsidesøk" in body
+    assert "site-search-form" in body
+    assert "site-search-url" in body
+    assert "site-search-query" in body
+    assert "site-search-results" in body
+    assert "submitSiteSearch" in body
+    assert "renderSiteSearchResults" in body
+    assert "/api/site-search" in body
+    assert "ingen innlogging eller nedlasting" in body
+
+
 def test_dashboard_includes_bob_result_actions_ui() -> None:
     response = client.get("/")
 
@@ -141,6 +158,8 @@ def test_dashboard_orders_bob_communication_before_operations() -> None:
     assert response.status_code == 200
     body = response.text
     assert body.index('id="bob-inbox-section"') < body.index('id="bob-task-section"')
+    assert body.index('id="bob-inbox-section"') < body.index('id="site-search-section"')
+    assert body.index('id="site-search-section"') < body.index('id="bob-task-section"')
     assert body.index('id="bob-task-section"') < body.index('id="bob-history-section"')
     assert body.index('id="bob-history-section"') < body.index('id="operations-section"')
     assert body.index('id="operations-section"') < body.index('aria-label="Statuskort"')

@@ -147,14 +147,28 @@ async def search_public_website(
         context_manager = async_playwright()
 
     async with context_manager as playwright:
-        browser = await playwright.chromium.launch(headless=True)
+        try:
+            browser = await playwright.chromium.launch(headless=True)
+        except Exception as exc:
+            raise SiteSearchError(
+                "browser_launch_failed",
+                "Could not start the headless browser runtime",
+                status_code=503,
+            ) from exc
         try:
             page = await browser.new_page()
-            await page.goto(
-                site_url,
-                wait_until="domcontentloaded",
-                timeout=SEARCH_TIMEOUT_MS,
-            )
+            try:
+                await page.goto(
+                    site_url,
+                    wait_until="domcontentloaded",
+                    timeout=SEARCH_TIMEOUT_MS,
+                )
+            except Exception as exc:
+                raise SiteSearchError(
+                    "navigation_failed",
+                    "The public website could not be opened within the search timeout",
+                    status_code=422,
+                ) from exc
             search_field = await _find_search_field(page)
             if search_field is None:
                 raise SiteSearchError(
@@ -163,8 +177,15 @@ async def search_public_website(
                     status_code=422,
                 )
 
-            await search_field.fill(query)
-            await search_field.press("Enter")
+            try:
+                await search_field.fill(query)
+                await search_field.press("Enter")
+            except Exception as exc:
+                raise SiteSearchError(
+                    "search_submit_failed",
+                    "The search field was found, but the query could not be submitted",
+                    status_code=422,
+                ) from exc
             try:
                 await page.wait_for_load_state(
                     "networkidle",
@@ -173,7 +194,14 @@ async def search_public_website(
             except Exception:
                 pass
 
-            raw_results = await _extract_visible_links(page)
+            try:
+                raw_results = await _extract_visible_links(page)
+            except Exception as exc:
+                raise SiteSearchError(
+                    "result_extraction_failed",
+                    "Search ran, but visible result links could not be read",
+                    status_code=422,
+                ) from exc
         finally:
             await browser.close()
 
@@ -222,6 +250,8 @@ def _rank_results(query: str, raw_results: list[dict[str, str]]) -> list[SiteSea
         title = (raw.get("title") or "").strip()
         raw_text = (raw.get("rawText") or title).strip()
         if not url or not title or url in seen_urls:
+            continue
+        if urlparse(url).scheme not in {"http", "https"}:
             continue
 
         score = score_site_search_result(query, f"{title} {raw_text}")

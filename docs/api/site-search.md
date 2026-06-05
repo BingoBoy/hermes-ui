@@ -10,6 +10,10 @@ The endpoint opens a public `http` or `https` page with Playwright, finds a
 visible search field, submits the query, reads visible result links, normalizes
 the result text, scores matches, and returns JSON.
 
+The Dashboard exposes the same flow in the `Nettsidesøk` section. It sends the
+same query parameters to the API, shows structured errors, and renders matching
+links with score and snippet.
+
 ## Response shape
 
 ```json
@@ -38,6 +42,8 @@ the result text, scores matches, and returns JSON.
 - It does not log in, use user cookies, bypass paywalls, solve CAPTCHA, follow
   magnet links, or download files.
 - If no visible search field is found, the endpoint returns a structured error.
+- Browser launch, navigation, query submission, and result extraction failures
+  are returned as structured errors instead of raw tracebacks.
 
 ## Scoring
 
