@@ -33,7 +33,7 @@
 
 **Depends on:** v1 Phase 4 (tunnel live at `https://hermes-ui.strategistudio.no`), v1 Phase 6 (operations section pattern)
 
-**Status:** Not started — discuss → plan → execute → verify
+**Status:** Planned 2026-06-04 — ready for `/gsd-execute-phase 7`
 
 **Success criteria:**
 
