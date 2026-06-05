@@ -663,6 +663,7 @@ DASHBOARD_HTML = """\
         Read-only LaunchAgent-detaljer for Hermes UI og Hermes gateway (verifiserte plist-stier på serveren).
       </p>
       <div id="operations-agents-wrap" class="ops-grid"></div>
+      <div id="operations-tunnel-wrap" class="ops-tunnel" hidden></div>
       <div id="operations-docker-wrap" class="ops-docker" hidden></div>
       <details style="margin-top: 12px;">
         <summary>Teknisk JSON</summary>
@@ -1772,8 +1773,11 @@ DASHBOARD_HTML = """\
 
     function renderOperations(payload) {
       const wrap = document.getElementById("operations-agents-wrap");
+      const tunnelWrap = document.getElementById("operations-tunnel-wrap");
       const dockerWrap = document.getElementById("operations-docker-wrap");
       wrap.innerHTML = "";
+      tunnelWrap.hidden = true;
+      tunnelWrap.innerHTML = "";
       dockerWrap.hidden = true;
       dockerWrap.textContent = "";
 
@@ -1813,6 +1817,37 @@ DASHBOARD_HTML = """\
           </dl>
         `;
         wrap.appendChild(card);
+      }
+
+      const tunnel = data.cloudflare_tunnel || null;
+      if (tunnel) {
+        tunnelWrap.hidden = false;
+        const cf = tunnel.cloudflared || {};
+        const edge = tunnel.edge_probe || {};
+        const processRunning = !!cf.process_running;
+        const edgeStatus = edge.http_status != null ? String(edge.http_status) : "—";
+        const accessRedirect = edge.access_redirect ? "Ja" : "Nei";
+        const edgeNote = edge.enabled === false
+          ? "Edge-probe deaktivert"
+          : (edge.error ? escapeHtml(edge.error) : `HTTP ${edgeStatus}`);
+        tunnelWrap.innerHTML = `
+          <article class="card ops-agent">
+            <h3>Cloudflare Tunnel</h3>
+            <p class="subtle">${escapeHtml(tunnel.disclaimer || "Lokal observasjon — ikke full edge-status.")}</p>
+            <div class="status-row">
+              <span class="badge ${processRunning ? "ok" : "warn"}">${processRunning ? "cloudflared kjører" : "cloudflared ikke observert"}</span>
+              <span class="subtle">Lokal agent observert</span>
+            </div>
+            <dl class="meta">
+              <dt>Offentlig URL</dt><dd>${escapeHtml(tunnel.public_hostname || "—")}</dd>
+              <dt>Tunnel-navn</dt><dd>${escapeHtml(tunnel.tunnel_name || "—")}</dd>
+              <dt>Service target</dt><dd>${escapeHtml(tunnel.service_target || "—")}</dd>
+              <dt>cloudflared</dt><dd>${escapeHtml(cf.version || (cf.installed ? "installert" : "ikke funnet"))}</dd>
+              <dt>Edge-probe</dt><dd>${edgeNote}</dd>
+              <dt>Access-viderekobling</dt><dd>${accessRedirect}</dd>
+            </dl>
+          </article>
+        `;
       }
 
       const docker = data.docker || {};

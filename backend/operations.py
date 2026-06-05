@@ -4,12 +4,20 @@ from __future__ import annotations
 
 import os
 import plistlib
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from backend.config import Settings
 from backend.status import _launchctl_status, _run_read_only
+
+_TUNNEL_DISCLAIMER = (
+    "Lokal observasjon av cloudflared og HTTP-probe. "
+    "Viser ikke full Cloudflare edge-status."
+)
+_PROCESS_SUMMARY_MAX = 120
 
 
 def _expand_path(path: str) -> str:
@@ -133,6 +141,177 @@ def _build_launch_agent(
     }
 
 
+def _sanitize_process_summary(line: str) -> str:
+    cleaned = line.strip()
+    if ".cloudflared/" in cleaned:
+        idx = cleaned.find(".cloudflared/")
+        cleaned = cleaned[:idx] + ".cloudflared/[redacted]"
+    if len(cleaned) > _PROCESS_SUMMARY_MAX:
+        return cleaned[: _PROCESS_SUMMARY_MAX - 3] + "..."
+    return cleaned
+
+
+def _parse_http_status_and_location(stdout: str) -> tuple[int | None, str | None]:
+    status: int | None = None
+    location_host: str | None = None
+    for line in stdout.splitlines():
+        stripped = line.strip()
+        if stripped.upper().startswith("HTTP/"):
+            match = re.match(r"HTTP/\d(?:\.\d)?\s+(\d{3})", stripped, re.IGNORECASE)
+            if match:
+                status = int(match.group(1))
+        elif stripped.lower().startswith("location:"):
+            location_value = stripped.split(":", 1)[1].strip()
+            location_host = urlparse(location_value).hostname
+    return status, location_host
+
+
+def _cloudflared_binary_status(settings: Settings) -> dict[str, Any]:
+    which = _run_read_only(["/usr/bin/which", "cloudflared"])
+    binary_path = which.stdout.strip() if which.ok and which.stdout else ""
+    if not binary_path and settings.hermes_cloudflared_bin:
+        candidate = _expand_path(settings.hermes_cloudflared_bin)
+        if Path(candidate).is_file():
+            binary_path = candidate
+
+    if not binary_path:
+        return {
+            "installed": False,
+            "binary_path": None,
+            "version": None,
+            "error": which.stderr or "cloudflared not found",
+        }
+
+    version = _run_read_only([binary_path, "--version"], timeout=3.0)
+    return {
+        "installed": True,
+        "binary_path": binary_path,
+        "version": version.stdout if version.stdout else None,
+        "error": None if version.stdout else (version.stderr or "version check failed"),
+    }
+
+
+def _cloudflared_process_status() -> dict[str, Any]:
+    result = _run_read_only(["/usr/bin/pgrep", "-lf", "cloudflared"], timeout=2.0)
+    if not result.stdout:
+        return {
+            "process_running": False,
+            "process_summary": None,
+            "error": None if result.ok else (result.stderr or "pgrep failed"),
+        }
+
+    first_line = result.stdout.splitlines()[0]
+    return {
+        "process_running": True,
+        "process_summary": _sanitize_process_summary(first_line),
+        "error": None,
+    }
+
+
+def _edge_probe_status(settings: Settings) -> dict[str, Any]:
+    if not settings.hermes_ops_edge_probe:
+        return {
+            "enabled": False,
+            "attempted": False,
+            "http_status": None,
+            "access_redirect": False,
+            "location_host": None,
+            "error": None,
+        }
+
+    hostname = settings.hermes_public_hostname.strip()
+    if not hostname:
+        return {
+            "enabled": True,
+            "attempted": False,
+            "http_status": None,
+            "access_redirect": False,
+            "location_host": None,
+            "error": "public hostname not configured",
+        }
+
+    url = f"https://{hostname}/api/status"
+    result = _run_read_only(
+        [
+            "/usr/bin/curl",
+            "-sS",
+            "-D",
+            "-",
+            "-o",
+            "/dev/null",
+            "--max-time",
+            "5",
+            "--max-redirs",
+            "0",
+            url,
+        ],
+        timeout=6.0,
+    )
+    http_status, location_host = _parse_http_status_and_location(result.stdout)
+    error = None
+    if http_status is None:
+        error = result.stderr or "could not parse HTTP status from edge probe"
+
+    access_redirect = bool(
+        http_status == 302
+        and location_host
+        and "cloudflareaccess.com" in location_host.lower()
+    )
+    return {
+        "enabled": True,
+        "attempted": True,
+        "http_status": http_status,
+        "access_redirect": access_redirect,
+        "location_host": location_host,
+        "error": error,
+    }
+
+
+def _cloudflared_launchctl_status(settings: Settings) -> dict[str, Any]:
+    label = settings.hermes_cloudflared_launchd_label.strip()
+    if not label:
+        return {
+            "included": False,
+            "reason": "no stable cloudflared LaunchAgent label configured",
+        }
+
+    launchctl_list = _launchctl_status(label)
+    launchctl_print = _launchctl_print_state(label)
+    running = bool(
+        launchctl_list.get("matched")
+        or launchctl_print.get("state") == "running"
+    )
+    return {
+        "included": True,
+        "label": label,
+        "running": running,
+        "launchctl_list": launchctl_list,
+        "launchctl_print": launchctl_print,
+    }
+
+
+def _cloudflare_tunnel_status(settings: Settings) -> dict[str, Any]:
+    binary = _cloudflared_binary_status(settings)
+    process = _cloudflared_process_status()
+    return {
+        "observation_scope": "local_agent_and_edge_probe",
+        "disclaimer": _TUNNEL_DISCLAIMER,
+        "public_hostname": settings.hermes_public_hostname,
+        "tunnel_name": settings.hermes_cloudflare_tunnel_name,
+        "service_target": f"http://{settings.host}:{settings.port}",
+        "cloudflared": {
+            "installed": binary["installed"],
+            "binary_path": binary["binary_path"],
+            "version": binary["version"],
+            "process_running": process["process_running"],
+            "process_summary": process["process_summary"],
+            "error": binary.get("error") or process.get("error"),
+        },
+        "edge_probe": _edge_probe_status(settings),
+        "launchctl": _cloudflared_launchctl_status(settings),
+    }
+
+
 def _docker_status(include_docker: bool) -> dict[str, Any]:
     if not include_docker:
         return {
@@ -193,5 +372,6 @@ def get_operations_status(settings: Settings) -> dict[str, Any]:
             ),
         ],
         "docker": _docker_status(settings.hermes_ops_include_docker),
+        "cloudflare_tunnel": _cloudflare_tunnel_status(settings),
         "checked_at": datetime.now(timezone.utc).isoformat(),
     }

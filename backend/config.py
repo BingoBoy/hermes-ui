@@ -31,6 +31,11 @@ class Settings:
         "~/Library/LaunchAgents/ai.hermes.gateway.plist"
     )
     hermes_ops_include_docker: bool = False
+    hermes_public_hostname: str = "hermes-ui.strategistudio.no"
+    hermes_cloudflare_tunnel_name: str = "bob-mac-mini-m4"
+    hermes_ops_edge_probe: bool = True
+    hermes_cloudflared_bin: str = "/opt/homebrew/bin/cloudflared"
+    hermes_cloudflared_launchd_label: str = ""
     allow_unsafe_commands: bool = False
     allow_service_actions: bool = False
     allow_bob_tasks: bool = False
@@ -62,6 +67,22 @@ def get_settings() -> Settings:
         ).strip()
         or "~/Library/LaunchAgents/ai.hermes.gateway.plist",
         hermes_ops_include_docker=_env_bool("HERMES_OPS_INCLUDE_DOCKER", False),
+        hermes_public_hostname=os.getenv(
+            "HERMES_PUBLIC_HOSTNAME", "hermes-ui.strategistudio.no"
+        ).strip()
+        or "hermes-ui.strategistudio.no",
+        hermes_cloudflare_tunnel_name=os.getenv(
+            "HERMES_CLOUDFLARE_TUNNEL_NAME", "bob-mac-mini-m4"
+        ).strip()
+        or "bob-mac-mini-m4",
+        hermes_ops_edge_probe=_env_bool("HERMES_OPS_EDGE_PROBE", True),
+        hermes_cloudflared_bin=os.getenv(
+            "HERMES_CLOUDFLARED_BIN", "/opt/homebrew/bin/cloudflared"
+        ).strip()
+        or "/opt/homebrew/bin/cloudflared",
+        hermes_cloudflared_launchd_label=os.getenv(
+            "HERMES_CLOUDFLARED_LAUNCHD_LABEL", ""
+        ).strip(),
         allow_unsafe_commands=_env_bool("ALLOW_UNSAFE_COMMANDS", False),
         allow_service_actions=_env_bool("ALLOW_SERVICE_ACTIONS", False),
         allow_bob_tasks=_env_bool("ALLOW_BOB_TASKS", False),

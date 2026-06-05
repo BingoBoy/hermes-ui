@@ -158,6 +158,9 @@ def test_dashboard_includes_operations_section() -> None:
     assert 'fetchJson("/api/operations")' in body
     assert "Hermes UI" in body
     assert "Hermes Gateway" in body
+    assert "operations-tunnel-wrap" in body
+    assert "Cloudflare Tunnel" in body
+    assert "Lokal agent observert" in body
 
 
 def test_dashboard_includes_bob_task_templates_ui() -> None:

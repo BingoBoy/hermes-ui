@@ -218,6 +218,20 @@ Returns structured details for `no.truls.hermes-ui` and `ai.hermes.gateway` (pli
 
 Docker block is off by default (`HERMES_OPS_INCLUDE_DOCKER=false`). On Bob (2026-06-04) Docker was not installed; gateway runs via LaunchAgent.
 
+### Cloudflare tunnel observation (Phase 7)
+
+`GET /api/operations` includes a `cloudflare_tunnel` object — **local agent and HTTP probe only**, not full Cloudflare control-plane health.
+
+| Setting | Default | Purpose |
+|---------|---------|---------|
+| `HERMES_PUBLIC_HOSTNAME` | `hermes-ui.strategistudio.no` | Edge probe target host |
+| `HERMES_CLOUDFLARE_TUNNEL_NAME` | `bob-mac-mini-m4` | Display name (from Phase 4) |
+| `HERMES_OPS_EDGE_PROBE` | `true` | Set `false` to skip external curl in dev/tests |
+| `HERMES_CLOUDFLARED_BIN` | `/opt/homebrew/bin/cloudflared` | Version check binary |
+| `HERMES_CLOUDFLARED_LAUNCHD_LABEL` | (empty) | Only if Bob has stable cloudflared LaunchAgent |
+
+Probes: `cloudflared --version`, `pgrep -lf cloudflared`, optional `curl -D -` to public URL (HTTP status + Location host only). Does **not** use `cloudflared tunnel list` or read `~/.cloudflared` credentials.
+
 ## Related Documents
 
 - `README.md` — quick Bob operations and API smoke tests
