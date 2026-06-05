@@ -18,6 +18,8 @@ _TUNNEL_DISCLAIMER = (
     "Viser ikke full Cloudflare edge-status."
 )
 _PROCESS_SUMMARY_MAX = 120
+_TOKEN_ARG_RE = re.compile(r"--token\s+\S+")
+_JWT_RE = re.compile(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?")
 
 
 def _expand_path(path: str) -> str:
@@ -146,6 +148,8 @@ def _sanitize_process_summary(line: str) -> str:
     if ".cloudflared/" in cleaned:
         idx = cleaned.find(".cloudflared/")
         cleaned = cleaned[:idx] + ".cloudflared/[redacted]"
+    cleaned = _TOKEN_ARG_RE.sub("--token [redacted]", cleaned)
+    cleaned = _JWT_RE.sub("[redacted]", cleaned)
     if len(cleaned) > _PROCESS_SUMMARY_MAX:
         return cleaned[: _PROCESS_SUMMARY_MAX - 3] + "..."
     return cleaned

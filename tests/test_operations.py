@@ -169,3 +169,39 @@ def test_cloudflare_tunnel_redacts_cloudflared_paths(monkeypatch, tmp_path: Path
     assert "secret.json" not in summary
     assert ".cloudflared/[redacted]" in summary
     assert "secret" not in str(payload)
+
+
+def test_cloudflare_tunnel_redacts_tunnel_token(monkeypatch, tmp_path: Path) -> None:
+    plist_path = tmp_path / "agent.plist"
+    plist_path.write_bytes(plistlib.dumps({"Label": "test.agent", "ProgramArguments": ["/bin/true"]}))
+    settings = Settings(
+        hermes_ui_plist_path=str(plist_path),
+        hermes_gateway_plist_path=str(plist_path),
+        hermes_ui_launchd_label="test.agent",
+        hermes_launchd_label="test.agent",
+        hermes_ops_edge_probe=False,
+    )
+    _mock_launch_agents(monkeypatch)
+    token = "eyJhIjoiNDZkNWYwYjE0ZmM5MmRiYjI2ZTAxMWYwZWIzOTU3NzUiLCJzIjoiTUR..."
+
+    def fake_run(args: list[str], timeout: float = 2.0) -> CommandResult:
+        if args[:3] == ["/usr/bin/pgrep", "-lf", "cloudflared"]:
+            return CommandResult(
+                ok=True,
+                stdout=f"1021 /opt/homebrew/bin/cloudflared tunnel run --token {token}",
+                stderr="",
+            )
+        if args == ["/usr/bin/which", "cloudflared"]:
+            return CommandResult(ok=True, stdout="/opt/homebrew/bin/cloudflared", stderr="")
+        if len(args) >= 2 and args[1] == "--version":
+            return CommandResult(ok=True, stdout="cloudflared version 2026.5.1", stderr="")
+        return CommandResult(ok=False, stdout="", stderr="")
+
+    monkeypatch.setattr("backend.operations._run_read_only", fake_run)
+    payload = get_operations_status(settings)
+    summary = payload["cloudflare_tunnel"]["cloudflared"]["process_summary"]
+    assert summary is not None
+    assert token not in summary
+    assert "eyJ" not in summary
+    assert "--token [redacted]" in summary
+    assert "secret" not in str(payload)
