@@ -8,7 +8,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-04)
 
 **Current focus:** Milestone **v1.1 Operational Visibility** — requirements + roadmap defined. **Phase 7** next (read-only Cloudflare tunnel status). No code started.
 
-**Last activity:** 2026-06-04 — `/gsd-plan-phase 7`.
+**Last activity:** 2026-06-04 — Phase 7 feat(07) on main; Bob SSH blocked at 7.5.
 
 ## Workflow
 
@@ -24,9 +24,9 @@ discuss -> plan -> execute -> verify
 |-------|-------|
 | Phase | 7 |
 | Name | Cloudflare Tunnel Status |
-| Status | Planned — ready for execute |
+| Status | Executed locally — Bob verify pending |
 | Requirements | OPS-01–03 (Phase 7) |
-| Next command | `/gsd-execute-phase 7` |
+| Next command | Bob manual verify, then `/gsd-verify-work 7` |
 
 ## Session Plan
 
