@@ -29,6 +29,7 @@ from backend.service_actions import (
     build_restart_response,
 )
 from backend.operations import get_operations_status
+from backend.site_search import SiteSearchError, SiteSearchInput, search_public_website
 from backend.status import get_hermes_status, get_service_status, get_system_status
 
 
@@ -70,6 +71,26 @@ def api_hermes_status() -> dict:
 def api_operations() -> dict:
     settings = get_settings()
     return get_operations_status(settings)
+
+
+@app.get("/api/site-search")
+async def api_site_search(
+    site_url: str = Query(..., alias="siteUrl", min_length=1),
+    query: str = Query(..., min_length=1),
+) -> dict:
+    try:
+        return await search_public_website(
+            SiteSearchInput(site_url=site_url, query=query)
+        )
+    except SiteSearchError as exc:
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail={
+                "success": False,
+                "error": exc.error,
+                "detail": exc.detail,
+            },
+        ) from None
 
 
 @app.post("/api/hermes/restart")
